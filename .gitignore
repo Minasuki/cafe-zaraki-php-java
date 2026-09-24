@@ -1,0 +1,28 @@
+# Entorno
+.env
+.env.local
+*.log
+
+# PHP
+vendor/
+composer.lock
+
+# Java
+*.class
+target/
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Builds
+dist/
+build/
+node_modules/
