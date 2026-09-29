@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Café Zaraki - Ordena aquí</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/cliente.css">
+</head>
+<body>
+    <header>
+        <div>
+            <h1>☕ Café Zaraki</h1>
+            <div class="subtitle">Pide tu café favorito</div>
+        </div>
+        <button id="btn-carrito" class="btn-primary">
+            🛒 Carrito (<span id="contador-carrito">0</span>)
+        </button>
+    </header>
+
+    <main class="container">
+        <!-- Filtros por categoría -->
+        <div class="categorias" id="categorias">
+            <button class="cat-btn active" data-categoria="todas">Todas</button>
+            <!-- Se llenan dinámicamente -->
+        </div>
+
+        <!-- Grid de productos -->
+        <div class="productos-grid" id="productos-grid">
+            <p class="loading">Cargando menú...</p>
+        </div>
+    </main>
+
+    <!-- Carrito lateral (se abre al hacer clic) -->
+    <aside class="carrito-panel" id="carrito-panel">
+        <div class="carrito-header">
+            <h2>Tu pedido</h2>
+            <button id="cerrar-carrito" class="btn-cerrar">✕</button>
+        </div>
+
+        <div class="carrito-items" id="carrito-items">
+            <p class="vacio">Aún no has agregado nada</p>
+        </div>
+
+        <div class="carrito-footer">
+            <div class="total-line">
+                <span>Total:</span>
+                <strong id="total-carrito">$0.00</strong>
+            </div>
+            <input
+                type="text"
+                id="nombre-cliente"
+                placeholder="Tu nombre"
+                required
+            >
+            <button id="btn-enviar-pedido" class="btn-primary btn-block">
+                Enviar pedido
+            </button>
+        </div>
+    </aside>
+
+    <!-- Overlay para cerrar el carrito -->
+    <div class="overlay" id="overlay"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/cliente.js"></script>
+</body>
+</html>
