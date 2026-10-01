@@ -1,5 +1,6 @@
 // js/empleado.js - Panel del empleado con auto-refresh
 
+let todasLasOrdenes = [];
 let ordenes = [];
 let detalleCache = {};  // { order_id: [items] }
 let filtroActual = 'active';  // 'active' = pending + preparing + ready
@@ -28,7 +29,7 @@ function configurarEventos() {
             document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             filtroActual = btn.dataset.filtro;
-            renderOrdenes();
+            aplicarFiltro();  // ← Renderiza INMEDIATAMENTE con datos ya en memoria
         });
     });
 }
@@ -36,16 +37,10 @@ function configurarEventos() {
 // ============ Cargar órdenes del API ============
 async function cargarOrdenes() {
     try {
-        // Traer todas las órdenes
         const todas = await api.getOrders();
+        todasLasOrdenes = todas;
 
-        // Filtrar según la pestaña activa
-        ordenes = todas.filter(o => {
-            if (filtroActual === 'active') return o.status !== 'paid';
-            return o.status === filtroActual;
-        });
-
-        // Detectar nuevas órdenes para animarlas
+        // Detectar nuevas órdenes
         const nuevas = new Set();
         todas.forEach(o => {
             if (!ordenesConocidas.has(o.id) && !primeraCarga) {
@@ -55,17 +50,25 @@ async function cargarOrdenes() {
         todas.forEach(o => ordenesConocidas.add(o.id));
         primeraCarga = false;
 
-        // Cargar detalle de cada orden (en paralelo)
-        await cargarDetalles(ordenes);
+        // Cargar detalles solo de las que vamos a mostrar
+        await cargarDetalles(todas);
 
-        renderOrdenes(nuevas);
+        aplicarFiltro(nuevas);
         actualizarBadges(todas);
         actualizarHora();
     } catch (error) {
         console.error('Error cargando órdenes:', error);
         document.getElementById('ordenes-grid').innerHTML =
-            '<p class="vacio">Error al cargar órdenes. Verifica que el servidor esté activo.</p>';
+            '<p class="vacio">Error al cargar órdenes.</p>';
     }
+}
+
+function aplicarFiltro(nuevasIds = new Set()) {
+    ordenes = todasLasOrdenes.filter(o => {
+        if (filtroActual === 'active') return o.status !== 'paid';
+        return o.status === filtroActual;
+    });
+    renderOrdenes(nuevasIds);
 }
 
 async function cargarDetalles(listaOrdenes) {
@@ -163,7 +166,15 @@ function actualizarHora() {
     const el = document.getElementById('refresh-info');
     if (el) {
         const now = new Date();
-        el.textContent = `Actualizado: ${now.toLocaleTimeString('es-MX')}`;
+        const formato = now.toLocaleString('es-MX', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
+        el.textContent = `Actualizado: ${formato}`;
     }
 }
 

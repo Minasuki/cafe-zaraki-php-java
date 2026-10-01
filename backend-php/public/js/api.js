@@ -60,5 +60,12 @@ function formatPrice(value) {
 
 function formatTime(isoString) {
     const date = new Date(isoString);
-    return date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleString('es-MX', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    });
 }
