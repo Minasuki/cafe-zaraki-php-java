@@ -1,0 +1,194 @@
+/* ============ Panel del Empleado ============ */
+
+.filtros {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filtro-btn {
+    background: var(--color-blanco);
+    color: var(--color-espresso);
+    border: 2px solid var(--color-latte);
+    padding: var(--space-sm) var(--space-md);
+    position: relative;
+}
+
+.filtro-btn.active {
+    background: var(--color-cafe);
+    color: var(--color-blanco);
+    border-color: var(--color-cafe);
+}
+
+.filtro-btn .badge {
+    display: inline-block;
+    background: var(--color-peligro);
+    color: white;
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+    margin-left: 6px;
+    font-weight: 700;
+}
+
+.refresh-info {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+/* Grid de órdenes */
+.ordenes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-lg);
+}
+
+.orden-card {
+    background: var(--color-blanco);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-top: 5px solid var(--color-gris);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.orden-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.orden-card.status-pending    { border-top-color: var(--status-pending); }
+.orden-card.status-preparing  { border-top-color: var(--status-preparing); }
+.orden-card.status-ready      { border-top-color: var(--status-ready); }
+.orden-card.status-paid       { border-top-color: var(--status-paid); opacity: 0.7; }
+
+.orden-header {
+    padding: var(--space-md) var(--space-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-crema);
+}
+
+.orden-id {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--color-espresso);
+}
+
+.orden-hora {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.orden-cliente {
+    padding: var(--space-md) var(--space-lg);
+    font-size: 1rem;
+    color: var(--color-espresso);
+}
+
+.orden-cliente strong {
+    display: block;
+    font-size: 1.15rem;
+    margin-bottom: 4px;
+}
+
+.orden-status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+}
+
+.status-pending   .orden-status-badge { background: var(--status-pending); }
+.status-preparing .orden-status-badge { background: var(--status-preparing); }
+.status-ready     .orden-status-badge { background: var(--status-ready); }
+.status-paid      .orden-status-badge { background: var(--status-paid); }
+
+.orden-items {
+    padding: 0 var(--space-lg) var(--space-md);
+    flex-grow: 1;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.orden-items ul {
+    list-style: none;
+}
+
+.orden-items li {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-xs) 0;
+    font-size: 0.9rem;
+    border-bottom: 1px dashed #eee;
+}
+
+.orden-items li:last-child {
+    border-bottom: none;
+}
+
+.orden-items .cant {
+    font-weight: 700;
+    color: var(--color-cafe);
+    min-width: 30px;
+}
+
+.orden-total {
+    padding: var(--space-md) var(--space-lg);
+    border-top: 2px solid var(--color-crema);
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.orden-acciones {
+    padding: var(--space-md) var(--space-lg) var(--space-lg);
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.orden-acciones button {
+    flex: 1;
+    min-width: 100px;
+    font-size: 0.9rem;
+    padding: var(--space-sm);
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--color-exito);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 500;
+}
+
+.loading-overlay.show {
+    opacity: 1;
+}
+
+@keyframes pulse-new {
+    0%   { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+    70%  { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+}
+
+.orden-card.nueva {
+    animation: pulse-new 1.5s ease-out 2;
+}

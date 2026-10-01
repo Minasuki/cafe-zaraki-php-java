@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Café Zaraki - Panel de Empleado</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/empleado.css">
+</head>
+<body>
+    <header>
+        <div>
+            <h1>👨‍🍳 Panel de Empleado</h1>
+            <div class="subtitle">Café Zaraki</div>
+        </div>
+        <div id="refresh-info" style="font-size: 0.9rem;"></div>
+    </header>
+
+    <main class="container">
+        <div class="filtros">
+            <button class="filtro-btn active" data-filtro="active">Activas <span class="badge">0</span></button>
+            <button class="filtro-btn" data-filtro="pending">Pendientes <span class="badge">0</span></button>
+            <button class="filtro-btn" data-filtro="preparing">Preparando <span class="badge">0</span></button>
+            <button class="filtro-btn" data-filtro="ready">Listas <span class="badge">0</span></button>
+            <button class="filtro-btn" data-filtro="paid">Cobradas <span class="badge">0</span></button>
+        </div>
+
+        <div class="ordenes-grid" id="ordenes-grid">
+            <p class="loading">Cargando órdenes...</p>
+        </div>
+    </main>
+
+    <div class="loading-overlay" id="loading-overlay">✓ Actualizado</div>
+
+    <script src="js/api.js"></script>
+    <script src="js/empleado.js"></script>
+</body>
+</html>
