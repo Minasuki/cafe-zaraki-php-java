@@ -1,13 +1,14 @@
 <?php
+// Configuración MariaDB (XAMPP)
 $host = '127.0.0.1';
-$port = '5432';         // PostgreSQL en Windows usa 5432 por defecto
+$port = '3306';       // Puerto de MariaDB
 $dbname = 'cafe_zaraki';
-$user = 'app_php';
-$password = 'pass_php';
+$user = 'root';       // Usuario por defecto de XAMPP
+$password = '';       // Sin contraseña por defecto
 
 try {
     $pdo = new PDO(
-        "pgsql:host=$host;port=$port;dbname=$dbname",
+        "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4",
         $user,
         $password,
         [
