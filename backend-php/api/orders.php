@@ -114,15 +114,16 @@ try {
         $stmt = $pdo->prepare("
             INSERT INTO orders (customer_name, total, status)
             VALUES (:name, :total, 'pending')
-            RETURNING id, created_at
         ");
         $stmt->execute([
             ':name' => $body['customer_name'],
             ':total' => $total,
         ]);
-        $order = $stmt->fetch();
-        $order_id = $order['id'];
-        $created_at = $order['created_at'];
+        $order_id = $pdo->lastInsertId();
+
+        $stmt2 = $pdo->prepare("SELECT created_at FROM orders WHERE id = :id");
+        $stmt2->execute([':id' => $order_id]);
+        $created_at = $stmt2->fetch()['created_at'];
 
         // Insertar items
         $stmtItem = $pdo->prepare("
@@ -155,7 +156,6 @@ try {
     // Método no soportado
     http_response_code(405);
     echo json_encode(['error' => 'Método no permitido']);
-
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();

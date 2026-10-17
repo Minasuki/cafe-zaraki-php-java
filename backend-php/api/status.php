@@ -41,13 +41,16 @@ try {
         UPDATE orders
         SET status = :status
         WHERE id = :id
-        RETURNING id, customer_name, status, total, created_at
     ");
-    $stmt->execute([
-        ':status' => $status,
-        ':id' => $order_id,
-    ]);
-    $order = $stmt->fetch();
+    $stmt->execute([':status' => $status, ':id' => $order_id]);
+
+    // Obtener la orden actualizada
+    $stmt2 = $pdo->prepare("
+        SELECT id, customer_name, status, total, created_at
+        FROM orders WHERE id = :id
+    ");
+    $stmt2->execute([':id' => $order_id]);
+    $order = $stmt2->fetch();
 
     if (!$order) {
         http_response_code(404);
@@ -59,7 +62,6 @@ try {
     $order['total'] = (float) $order['total'];
 
     echo json_encode($order, JSON_UNESCAPED_UNICODE);
-
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
