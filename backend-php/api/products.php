@@ -16,7 +16,7 @@ try {
     $stmt = $pdo->query("
         SELECT id, name, description, price, category
         FROM products
-        WHERE is_available = true
+        WHERE is_available = true AND stock > 0
         ORDER BY category, name
     ");
     $products = $stmt->fetchAll();

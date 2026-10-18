@@ -182,11 +182,12 @@ function actualizarHora() {
 async function cambiarEstado(orderId, nuevoStatus) {
     try {
         await api.updateStatus(orderId, nuevoStatus);
-        delete detalleCache[orderId];  // Forzar recarga
+        delete detalleCache[orderId];
         showToast(`Orden #${orderId} actualizada`, 'success');
         await cargarOrdenes();
     } catch (error) {
-        showToast('Error al cambiar el estado', 'error');
+        // Ahora mostramos el error real que viene del backend
+        showToast(error.message, 'error');
         console.error(error);
     }
 }
