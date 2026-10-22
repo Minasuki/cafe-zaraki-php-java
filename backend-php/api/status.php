@@ -57,6 +57,8 @@ try {
             // Obtener todos los productos de esta orden
             $stmtItems = $pdo->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = :id");
             $stmtItems->execute([':id' => $order_id]);
+             $stmtCheckStock = $pdo->prepare("SELECT stock FROM products WHERE id = :pid FOR UPDATE");
+            $stmtUpdateStock = $pdo->prepare("UPDATE products SET stock = stock - :qty WHERE id = :pid");
             $items = $stmtItems->fetchAll();
 
             if (empty($items)) {
@@ -71,16 +73,20 @@ try {
                 WHERE id = :pid AND stock >= :qty
             ");
 
-            foreach ($items as $item) {
-                $stmtStock->execute([
+                        foreach ($items as $item) {
+                // 1. Bloquear la fila y verificar stock real
+                $stmtCheckStock->execute([':pid' => $item['product_id']]);
+                $prod = $stmtCheckStock->fetch();
+
+                if (!$prod || $prod['stock'] < $item['quantity']) {
+                    throw new Exception("Stock insuficiente para el producto ID: " . $item['product_id']);
+                }
+
+                // 2. Descontar el stock
+                $stmtUpdateStock->execute([
                     ':qty' => $item['quantity'],
                     ':pid' => $item['product_id']
                 ]);
-
-                // Si rowCount() es 0, significa que no se actualizó nada (no hay stock)
-                if ($stmtStock->rowCount() === 0) {
-                    throw new Exception("Stock insuficiente para el producto ID: " . $item['product_id']);
-                }
             }
         }
 

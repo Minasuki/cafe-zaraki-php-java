@@ -13,18 +13,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 try {
+       // 1. Añadir 'stock' al SELECT
     $stmt = $pdo->query("
-        SELECT id, name, description, price, category
+        SELECT id, name, description, price, category, stock
         FROM products
         WHERE is_available = true AND stock > 0
         ORDER BY category, name
     ");
     $products = $stmt->fetchAll();
 
-    // Convertir tipos para que el JSON sea correcto
+    // 2. Convertir el stock a número entero
     foreach ($products as &$p) {
         $p['price'] = (float) $p['price'];
         $p['id'] = (int) $p['id'];
+        $p['stock'] = (int) $p['stock']; // <-- Agrega esta línea
     }
 
     echo json_encode($products, JSON_UNESCAPED_UNICODE);

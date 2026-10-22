@@ -1,5 +1,4 @@
-// js/cliente.js
-
+const MAX_POR_PRODUCTO = 10;
 let productos = [];
 let carrito = [];
 
@@ -69,10 +68,23 @@ function renderProductos(lista) {
 }
 
 function agregarAlCarrito(productId) {
-    const producto = productos.find(p => p.id === productId);
+        const producto = productos.find(p => p.id === productId);
     if (!producto) return;
 
     const existente = carrito.find(item => item.product_id === productId);
+    const cantidadActual = existente ? existente.quantity : 0;
+
+    // Validar límite máximo (10)
+    if (cantidadActual >= MAX_POR_PRODUCTO) {
+        alert(`Solo puedes pedir un máximo de ${MAX_POR_PRODUCTO} unidades de ${producto.name}.`);
+        return;
+    }
+
+    // Validar stock disponible
+    if (cantidadActual + 1 > producto.stock) {
+        alert(`Lo sentimos, solo quedan ${producto.stock} unidades de ${producto.name} en inventario.`);
+        return;
+    }
 
     if (existente) {
         existente.quantity++;
@@ -82,6 +94,7 @@ function agregarAlCarrito(productId) {
             name: producto.name,
             unit_price: parseFloat(producto.price),
             quantity: 1,
+            stock_max: producto.stock // Guardamos el stock para validar en el carrito
         });
     }
 
@@ -90,15 +103,31 @@ function agregarAlCarrito(productId) {
 }
 
 function cambiarCantidad(productId, delta) {
-    const item = carrito.find(i => i.product_id === productId);
+      const item = carrito.find(i => i.product_id === productId);
     if (!item) return;
 
-    item.quantity += delta;
+    const nuevaCantidad = item.quantity + delta;
 
-    if (item.quantity <= 0) {
+    // Si llega a 0, lo quitamos del carrito
+    if (nuevaCantidad <= 0) {
         carrito = carrito.filter(i => i.product_id !== productId);
+        renderCarrito();
+        return;
     }
 
+    // Validar límite máximo (10)
+    if (nuevaCantidad > MAX_POR_PRODUCTO) {
+        alert(`Solo puedes pedir un máximo de ${MAX_POR_PRODUCTO} unidades de ${item.name}.`);
+        return;
+    }
+
+    // Validar stock disponible
+    if (nuevaCantidad > item.stock_max) {
+        alert(`Lo sentimos, solo quedan ${item.stock_max} unidades de ${item.name}.`);
+        return;
+    }
+
+    item.quantity = nuevaCantidad;
     renderCarrito();
 }
 
