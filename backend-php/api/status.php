@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'PATCH') {
     exit;
 }
 
+
 try {
     $order_id = $_GET['id'] ?? null;
     $body = json_decode(file_get_contents('php://input'), true);
@@ -28,89 +29,35 @@ try {
         exit;
     }
 
-    $valid_statuses = ['pending', 'preparing', 'ready', 'paid'];
-    if (!in_array($status, $valid_statuses)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Estado inválido. Debe ser uno de: ' . implode(', ', $valid_statuses)]);
-        exit;
-    }
-
-    $pdo->beginTransaction();
-
-    try {
-        // 1. Verificar el estado actual de la orden (para no descontar stock dos veces)
-        $stmtCheck = $pdo->prepare("SELECT status FROM orders WHERE id = :id");
-        $stmtCheck->execute([':id' => $order_id]);
-        $ordenActual = $stmtCheck->fetch();
-
-        if (!$ordenActual) {
-            throw new Exception("Orden no encontrada");
+    // Si el estado al que quiere cambiar es 'paid', usamos el Procedimiento Almacenado
+    if ($status === 'paid') {
+        $stmt = $pdo->prepare("CALL sp_pagar_orden(:id)");
+        $stmt->execute([':id' => $order_id]);
+    } else {
+        // Para los otros estados (preparing, ready), seguimos usando PHP normal
+        $valid_statuses = ['pending', 'preparing', 'ready'];
+        if (!in_array($status, $valid_statuses)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Estado inválido.']);
+            exit;
         }
 
-        // 2. Actualizar el estado de la orden
         $stmt = $pdo->prepare("UPDATE orders SET status = :status WHERE id = :id");
         $stmt->execute([':status' => $status, ':id' => $order_id]);
-
-        // 3. Si el nuevo estado es 'paid' (Cobrado) y antes NO lo estaba, descontar stock
-        if ($status === 'paid' && $ordenActual['status'] !== 'paid') {
-            
-            // Obtener todos los productos de esta orden
-            $stmtItems = $pdo->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = :id");
-            $stmtItems->execute([':id' => $order_id]);
-             $stmtCheckStock = $pdo->prepare("SELECT stock FROM products WHERE id = :pid FOR UPDATE");
-            $stmtUpdateStock = $pdo->prepare("UPDATE products SET stock = stock - :qty WHERE id = :pid");
-            $items = $stmtItems->fetchAll();
-
-            if (empty($items)) {
-                throw new Exception("La orden no tiene productos");
-            }
-
-            // Preparar la consulta para restar stock
-            // Usamos "AND stock >= :qty" para evitar stock negativo
-            $stmtStock = $pdo->prepare("
-                UPDATE products 
-                SET stock = stock - :qty 
-                WHERE id = :pid AND stock >= :qty
-            ");
-
-                        foreach ($items as $item) {
-                // 1. Bloquear la fila y verificar stock real
-                $stmtCheckStock->execute([':pid' => $item['product_id']]);
-                $prod = $stmtCheckStock->fetch();
-
-                if (!$prod || $prod['stock'] < $item['quantity']) {
-                    throw new Exception("Stock insuficiente para el producto ID: " . $item['product_id']);
-                }
-
-                // 2. Descontar el stock
-                $stmtUpdateStock->execute([
-                    ':qty' => $item['quantity'],
-                    ':pid' => $item['product_id']
-                ]);
-            }
-        }
-
-        // Si todo salió bien, guardamos los cambios permanentemente
-        $pdo->commit();
-
-        // Obtener la orden actualizada para devolverla
-        $stmtGet = $pdo->prepare("SELECT id, customer_name, status, total, created_at FROM orders WHERE id = :id");
-        $stmtGet->execute([':id' => $order_id]);
-        $order = $stmtGet->fetch();
-
-        $order['id'] = (int) $order['id'];
-        $order['total'] = (float) $order['total'];
-
-        echo json_encode($order, JSON_UNESCAPED_UNICODE);
-
-    } catch (Exception $e) {
-        // Si algo falló, revertimos TODOS los cambios (Rollback)
-        $pdo->rollBack();
-        http_response_code(400);
-        echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
 
-} catch (Exception $e) {
-    http_response_code(500);
+    // Obtener la orden actualizada para devolverla al frontend
+    $stmtGet = $pdo->prepare("SELECT id, customer_name, status, total, created_at FROM orders WHERE id = :id");
+    $stmtGet->execute([':id' => $order_id]);
+    $order = $stmtGet->fetch();
+
+    $order['id'] = (int) $order['id'];
+    $order['total'] = (float) $order['total'];
+
+    echo json_encode($order, JSON_UNESCAPED_UNICODE);
+
+} catch (PDOException $e) {
+    // Si el Procedimiento Almacenado lanza un error (SIGNAL), PDO lo captura aquí
+    http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 }
