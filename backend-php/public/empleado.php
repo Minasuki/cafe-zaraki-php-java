@@ -1,20 +1,24 @@
+<?php
+session_start();
+// Si no hay sesión, lo pateamos al login
+if (!isset($_SESSION['usuario_id'])) {
+    header('Location: login.php');
+    exit;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Café Zaraki - Panel de Empleado</title>
+    <title>Dashboard - Café Zaraki</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/empleado.css">
 </head>
+
 <body>
-    <header>
-        <div>
-            <h1>👨‍🍳 Panel de Empleado</h1>
-            <div class="subtitle">Café Zaraki</div>
-        </div>
-        <div id="refresh-info" style="font-size: 0.9rem;"></div>
-    </header>
+    <?php include 'header.php'; ?>
 
     <main class="container">
         <div class="filtros">
@@ -35,4 +39,5 @@
     <script src="js/api.js"></script>
     <script src="js/empleado.js"></script>
 </body>
+
 </html>

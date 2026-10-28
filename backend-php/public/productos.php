@@ -79,16 +79,7 @@ $productos = $stmt->fetchAll();
 </head>
 
 <body>
-    <header style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <h1>📋 Gestión de Productos</h1>
-            <div class="subtitle">Café Zaraki</div>
-        </div>
-        <div>
-            <a href="dashboard.php" class="btn-primary" style="text-decoration: none; padding: 8px 16px; border-radius: 8px; margin-right: 10px;">Volver al Panel</a>
-            <a href="logout.php" class="btn-danger" style="text-decoration: none; padding: 8px 16px; border-radius: 8px;">Cerrar Sesión</a>
-        </div>
-    </header>
+    <?php include 'header.php'; ?>
 
     <main class="container">
         <?php if (isset($mensaje)): ?>
