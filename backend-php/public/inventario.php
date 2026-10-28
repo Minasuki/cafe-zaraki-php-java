@@ -26,26 +26,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['producto_id'], $_POST
 }
 
 // Obtener todos los productos (incluyendo los no disponibles)
-$stmt = $pdo->query("SELECT id, name, stock, is_available FROM products ORDER BY name");
+$stmt = $pdo->query("SELECT id, name, stock, is_available FROM products WHERE deleted_at IS NULL ORDER BY name");
 $productos = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Inventario - Café Zaraki</title>
     <link rel="stylesheet" href="css/base.css">
     <style>
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f9f9f9; }
-        .badge-off { background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
-        .badge-on { background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
-        .form-inline { display: flex; gap: 10px; align-items: center; }
-        .form-inline input { width: 80px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f9f9f9;
+        }
+
+        .badge-off {
+            background: #ffebee;
+            color: #c62828;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .badge-on {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .form-inline {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .form-inline input {
+            width: 80px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
     </style>
 </head>
+
 <body>
     <header style="display: flex; justify-content: space-between; align-items: center;">
         <div>
@@ -66,7 +112,7 @@ $productos = $stmt->fetchAll();
         <div class="card">
             <h3>Reabastecer Productos</h3>
             <p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">Los productos con stock "9999" son de preparación ilimitada. Los productos con stock "0" no se muestran en el menú del cliente hasta que se les agregue stock.</p>
-            
+
             <table>
                 <thead>
                     <tr>
@@ -108,4 +154,5 @@ $productos = $stmt->fetchAll();
         </div>
     </main>
 </body>
+
 </html>

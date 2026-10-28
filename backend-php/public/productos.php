@@ -6,46 +6,78 @@ if (!isset($_SESSION['usuario_id'])) {
 }
 require_once __DIR__ . '/../config.php';
 
-// Lógica para ELIMINAR un producto
+// Lógica para ARCHIVAR un producto (Soft Delete)
 if (isset($_GET['eliminar'])) {
     $id = (int)$_GET['eliminar'];
     try {
-        // Verificamos si el producto está en alguna orden. Si está, no lo borramos para no romper el historial.
-        $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM order_items WHERE product_id = :id");
-        $stmtCheck->execute([':id' => $id]);
-        if ($stmtCheck->fetchColumn() > 0) {
-            $error = "No se puede eliminar un producto que ya tiene ventas registradas. Mejor edítalo y ponlo como no disponible.";
-        } else {
-            $stmt = $pdo->prepare("DELETE FROM products WHERE id = :id");
-            $stmt->execute([':id' => $id]);
-            $mensaje = "Producto eliminado correctamente.";
-        }
+        // En lugar de borrarlo, le ponemos la fecha actual
+        $stmt = $pdo->prepare("UPDATE products SET deleted_at = CURRENT_TIMESTAMP WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        $mensaje = "Producto archivado correctamente. Ya no aparecerá en el menú.";
     } catch (Exception $e) {
-        $error = "Error al eliminar: " . $e->getMessage();
+        $error = "Error al archivar: " . $e->getMessage();
     }
 }
 
 // Obtener todos los productos
-$stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
+$stmt = $pdo->query("SELECT * FROM products WHERE deleted_at IS NULL ORDER BY id DESC");
 $productos = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Productos - Café Zaraki</title>
     <link rel="stylesheet" href="css/base.css">
     <style>
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f9f9f9; }
-        .acciones { display: flex; gap: 10px; }
-        .btn-sm { padding: 5px 10px; font-size: 0.85rem; border-radius: 4px; text-decoration: none; color: white; }
-        .btn-edit { background: #2196f3; }
-        .btn-delete { background: #e53935; }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f9f9f9;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-edit {
+            background: #2196f3;
+        }
+
+        .btn-delete {
+            background: #e53935;
+        }
     </style>
 </head>
+
 <body>
     <header style="display: flex; justify-content: space-between; align-items: center;">
         <div>
@@ -67,11 +99,15 @@ $productos = $stmt->fetchAll();
         <?php endif; ?>
 
         <div class="card">
+
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3>Catálogo de Productos</h3>
-                <a href="producto_form.php" class="btn-success" style="text-decoration: none; padding: 10px 16px; border-radius: 6px; color: white;">+ Nuevo Producto</a>
+                <h3>Catálogo de Productos Y Activos</h3>
+                <div>
+                    <a href="productos_archivados.php" class="btn-info" style="text-decoration: none; padding: 10px 16px; border-radius: 6px; color: white; margin-right: 10px;">Ver Archivados</a>
+                    <a href="producto_form.php" class="btn-success" style="text-decoration: none; padding: 10px 16px; border-radius: 6px; color: white;">+ Nuevo Producto</a>
+                </div>
             </div>
-            
+
             <table>
                 <thead>
                     <tr>
@@ -93,9 +129,7 @@ $productos = $stmt->fetchAll();
                             <td><?= $p['stock'] >= 9000 ? '∞' : $p['stock'] ?></td>
                             <td class="acciones">
                                 <a href="producto_form.php?id=<?= $p['id'] ?>" class="btn-sm btn-edit">Editar</a>
-                                <?php if ($p['stock'] < 9000): ?>
-                                    <a href="productos.php?eliminar=<?= $p['id'] ?>" class="btn-sm btn-delete" onclick="return confirm('¿Estás seguro de eliminar este producto?');">Eliminar</a>
-                                <?php endif; ?>
+                                <a href="productos.php?eliminar=<?= $p['id'] ?>" class="btn-sm btn-delete" onclick="return confirm('¿Archivar este producto? Desaparecerá del menú pero se guardará en el historial.');">Archivar</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -104,4 +138,5 @@ $productos = $stmt->fetchAll();
         </div>
     </main>
 </body>
+
 </html>

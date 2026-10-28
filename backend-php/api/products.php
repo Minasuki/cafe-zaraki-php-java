@@ -13,13 +13,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 try {
-       // 1. Añadir 'stock' al SELECT
+    // 1. Añadir 'stock' al SELECT
     $stmt = $pdo->query("
-        SELECT id, name, description, price, category, stock
-        FROM products
-        WHERE is_available = true AND stock > 0
-        ORDER BY category, name
-    ");
+    SELECT id, name, description, price, category, stock
+    FROM products
+    WHERE is_available = true AND stock > 0 AND deleted_at IS NULL
+    ORDER BY category, name
+");
     $products = $stmt->fetchAll();
 
     // 2. Convertir el stock a número entero
