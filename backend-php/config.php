@@ -1,10 +1,10 @@
 <?php
-// Configuración MariaDB (XAMPP)
+// Configuración MariaDB (XAMPP) - Usuario con privilegios mínimos
 $host = '127.0.0.1';
-$port = '3306';       // Puerto de MariaDB
+$port = '3306';
 $dbname = 'cafe_zaraki';
-$user = 'root';       // Usuario por defecto de XAMPP
-$password = '';       // Sin contraseña por defecto
+$user = 'app_cafe';              // <-- Nuevo usuario
+$password = 'CafeSeguro2026';   // <-- La contraseña que pusiste arriba
 
 try {
     $pdo = new PDO(
