@@ -19,8 +19,14 @@ if (isset($_GET['eliminar'])) {
     }
 }
 
-// Obtener todos los productos
-$stmt = $pdo->query("SELECT * FROM products WHERE deleted_at IS NULL ORDER BY id DESC");
+$buscar = $_GET['buscar'] ?? '';
+
+if ($buscar) {
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE deleted_at IS NULL AND (name LIKE :buscar OR category LIKE :buscar) ORDER BY id DESC");
+    $stmt->execute([':buscar' => "%$buscar%"]);
+} else {
+    $stmt = $pdo->query("SELECT * FROM products WHERE deleted_at IS NULL ORDER BY id DESC");
+}
 $productos = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -98,6 +104,14 @@ $productos = $stmt->fetchAll();
                     <a href="producto_form.php" class="btn-success" style="text-decoration: none; padding: 10px 16px; border-radius: 6px; color: white;">+ Nuevo Producto</a>
                 </div>
             </div>
+
+            <form method="GET" action="productos.php" style="margin-bottom: 15px; display: flex; gap: 10px;">
+                <input type="text" name="buscar" placeholder="Buscar producto o categoría..." value="<?= htmlspecialchars($buscar) ?>" style="flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px;">
+                <button type="submit" class="btn-primary" style="padding: 10px 20px;">Buscar</button>
+                <?php if ($buscar): ?>
+                    <a href="productos.php" class="btn-secondary" style="text-decoration: none; padding: 10px 20px; border-radius: 6px;">Limpiar</a>
+                <?php endif; ?>
+            </form>
 
             <table>
                 <thead>
