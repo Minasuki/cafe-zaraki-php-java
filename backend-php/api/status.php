@@ -6,6 +6,8 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: PATCH, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
+session_start(); // Iniciar sesión para saber quién cobra
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -33,6 +35,14 @@ try {
     if ($status === 'paid') {
         $stmt = $pdo->prepare("CALL sp_pagar_orden(:id)");
         $stmt->execute([':id' => $order_id]);
+
+        if (isset($_SESSION['usuario_id'])) {
+            $stmtCajero = $pdo->prepare("UPDATE orders SET cajero_id = :cajero WHERE id = :id");
+            $stmtCajero->execute([
+                ':cajero' => $_SESSION['usuario_id'],
+                ':id' => $order_id
+            ]);
+        }
     } else {
         // Para los otros estados (preparing, ready), seguimos usando PHP normal
         $valid_statuses = ['pending', 'preparing', 'ready'];
@@ -55,7 +65,6 @@ try {
     $order['total'] = (float) $order['total'];
 
     echo json_encode($order, JSON_UNESCAPED_UNICODE);
-
 } catch (PDOException $e) {
     // Si el Procedimiento Almacenado lanza un error (SIGNAL), PDO lo captura aquí
     http_response_code(400);

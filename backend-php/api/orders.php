@@ -62,17 +62,19 @@ try {
         // GET /orders.php?status=pending → listar órdenes (con filtro opcional)
         if ($status) {
             $stmt = $pdo->prepare("
-                SELECT id, customer_name, status, total, created_at
-                FROM orders
-                WHERE status = :status
-                ORDER BY created_at ASC
+                SELECT o.id, o.customer_name, o.status, o.total, o.created_at, u.nombre_completo AS cajero
+                FROM orders o
+                LEFT JOIN usuarios u ON o.cajero_id = u.id
+                WHERE o.status = :status
+                ORDER BY o.created_at ASC
             ");
             $stmt->execute([':status' => $status]);
         } else {
             $stmt = $pdo->query("
-                SELECT id, customer_name, status, total, created_at
-                FROM orders
-                ORDER BY created_at ASC
+               SELECT o.id, o.customer_name, o.status, o.total, o.created_at, u.nombre_completo AS cajero
+                FROM orders o
+                LEFT JOIN usuarios u ON o.cajero_id = u.id
+                ORDER BY o.created_at ASC
             ");
         }
 
