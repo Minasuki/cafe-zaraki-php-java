@@ -20,8 +20,15 @@ async function cargarProductos() {
         }, 800);
 
     } catch (error) {
-        document.getElementById('productos-lista').innerHTML =
-            '<p class="vacio">Error al cargar el menú. Verifica tu conexión.</p>';
+        console.error("Error real de la API:", error); // <-- Esto nos dirá en consola por qué falló
+        
+        const contenedor = document.getElementById('productos-lista');
+        if (contenedor) {
+            contenedor.innerHTML = '<p class="vacio">Error al cargar el menú. Verifica tu conexión.</p>';
+        } else {
+            // Si no encuentra el contenedor, avisa en la consola
+            console.error("No se encontró el div 'productos-lista' en el HTML.");
+        }
         showToast('No se pudo cargar el menú', 'error');
     }
 }
