@@ -1,4 +1,5 @@
-const MAX_POR_PRODUCTO = 10;
+// js/cliente.js
+
 let productos = [];
 let carrito = [];
 
@@ -10,79 +11,113 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function cargarProductos() {
     try {
         productos = await api.getProducts();
-        renderCategorias();
-        renderProductos(productos);
+        
+        // Simulamos un pequeño retraso (1 seg) para que se vea el Skeleton Loader
+        setTimeout(() => {
+            renderCategorias();
+            renderPopulares();
+            renderProductosLista(productos);
+        }, 800);
+
     } catch (error) {
-        document.getElementById('productos-grid').innerHTML =
-            '<p class="vacio">Error al cargar el menú. Verifica que el servidor esté corriendo.</p>';
+        document.getElementById('productos-lista').innerHTML =
+            '<p class="vacio">Error al cargar el menú. Verifica tu conexión.</p>';
         showToast('No se pudo cargar el menú', 'error');
     }
 }
 
+// 1. RENDERIZAR CATEGORÍAS CON ICONOS
 function renderCategorias() {
     const categorias = [...new Set(productos.map(p => p.category).filter(Boolean))];
     const contenedor = document.getElementById('categorias');
+    
+    // Diccionario de iconos por categoría
+    const iconos = {
+        'Bebidas': '☕',
+        'Pastelería': '🍰',
+        'Panadería': '🥐',
+        'General': '🍽️'
+    };
 
-    categorias.forEach(cat => {
-        const btn = document.createElement('button');
-        btn.className = 'cat-btn';
-        btn.dataset.categoria = cat;
-        btn.textContent = cat;
-        contenedor.appendChild(btn);
-    });
+    contenedor.innerHTML = `
+        <div class="cat-item active" data-categoria="todas">
+            <span>✨</span> Todas
+        </div>
+    ` + categorias.map(cat => `
+        <div class="cat-item" data-categoria="${cat}">
+            <span>${iconos[cat] || '🍽️'}</span> ${cat}
+        </div>
+    `).join('');
 
     contenedor.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('cat-btn')) return;
+        const btn = e.target.closest('.cat-item');
+        if (!btn) return;
 
-        contenedor.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
+        contenedor.querySelectorAll('.cat-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
 
-        const categoria = e.target.dataset.categoria;
+        const categoria = btn.dataset.categoria;
         const filtrados = categoria === 'todas'
             ? productos
             : productos.filter(p => p.category === categoria);
 
-        renderProductos(filtrados);
+        renderProductosLista(filtrados);
     });
 }
 
-function renderProductos(lista) {
-    const grid = document.getElementById('productos-grid');
+// 2. RENDERIZAR POPULARES
+function renderPopulares() {
+    // Tomamos los primeros 4 productos como "Populares"
+    const populares = productos.slice(0, 4);
+    const contenedor = document.getElementById('populares');
 
-    if (lista.length === 0) {
-        grid.innerHTML = '<p class="vacio">No hay productos en esta categoría</p>';
-        return;
-    }
-
-    grid.innerHTML = lista.map(p => `
-        <div class="producto">
-            <span class="categoria-tag">${p.category || 'General'}</span>
-            <h3>${p.name}</h3>
-            <p class="descripcion">${p.description || ''}</p>
-            <div class="precio">${formatPrice(p.price)}</div>
-            <button class="btn-primary" onclick="agregarAlCarrito(${p.id})">
-                Agregar al carrito
-            </button>
+    contenedor.innerHTML = populares.map(p => `
+        <div class="popular-card" onclick="agregarAlCarrito(${p.id})">
+            <img src="img/${p.id}.jpg" alt="${p.name}" onerror="this.src='https://placehold.co/400x400/2c1e17/ffffff?text=Cafe'">
+            <div class="popular-info">
+                <h4>${p.name}</h4>
+                <div class="precio">${formatPrice(p.price)}</div>
+            </div>
         </div>
     `).join('');
 }
 
+// 3. RENDERIZAR LISTA DE PRODUCTOS (Tarjeta completa clickeable)
+function renderProductosLista(lista) {
+    const contenedor = document.getElementById('productos-lista');
+
+    if (lista.length === 0) {
+        contenedor.innerHTML = '<p class="vacio">No hay productos en esta categoría</p>';
+        return;
+    }
+
+    contenedor.innerHTML = lista.map(p => `
+        <!-- EL ONCLICK ESTÁ EN TODO EL DIV -->
+        <div class="producto-card" onclick="agregarAlCarrito(${p.id})">
+            <img src="img/${p.id}.jpg" alt="${p.name}" onerror="this.src='https://placehold.co/400x400/2c1e17/ffffff?text=Cafe'">
+            <div class="producto-card-info">
+                <h4>${p.name}</h4>
+                <div class="precio">${formatPrice(p.price)}</div>
+            </div>
+            <div class="btn-add-icon">+</div>
+        </div>
+    `).join('');
+}
+
+// 4. LÓGICA DEL CARRITO (Se mantiene igual)
 function agregarAlCarrito(productId) {
-        const producto = productos.find(p => p.id === productId);
+    const producto = productos.find(p => p.id === productId);
     if (!producto) return;
 
     const existente = carrito.find(item => item.product_id === productId);
     const cantidadActual = existente ? existente.quantity : 0;
 
-    // Validar límite máximo (10)
-    if (cantidadActual >= MAX_POR_PRODUCTO) {
-        alert(`Solo puedes pedir un máximo de ${MAX_POR_PRODUCTO} unidades de ${producto.name}.`);
+    if (cantidadActual >= 10) { // Límite de 10
+        showToast(`Máximo 10 unidades por producto`, 'error');
         return;
     }
-
-    // Validar stock disponible
     if (cantidadActual + 1 > producto.stock) {
-        alert(`Lo sentimos, solo quedan ${producto.stock} unidades de ${producto.name} en inventario.`);
+        showToast(`Solo quedan ${producto.stock} unidades`, 'error');
         return;
     }
 
@@ -94,7 +129,7 @@ function agregarAlCarrito(productId) {
             name: producto.name,
             unit_price: parseFloat(producto.price),
             quantity: 1,
-            stock_max: producto.stock // Guardamos el stock para validar en el carrito
+            stock_max: producto.stock
         });
     }
 
@@ -103,27 +138,22 @@ function agregarAlCarrito(productId) {
 }
 
 function cambiarCantidad(productId, delta) {
-      const item = carrito.find(i => i.product_id === productId);
+    const item = carrito.find(i => i.product_id === productId);
     if (!item) return;
 
     const nuevaCantidad = item.quantity + delta;
-
-    // Si llega a 0, lo quitamos del carrito
     if (nuevaCantidad <= 0) {
         carrito = carrito.filter(i => i.product_id !== productId);
         renderCarrito();
         return;
     }
 
-    // Validar límite máximo (10)
-    if (nuevaCantidad > MAX_POR_PRODUCTO) {
-        alert(`Solo puedes pedir un máximo de ${MAX_POR_PRODUCTO} unidades de ${item.name}.`);
+    if (nuevaCantidad > 10) {
+        showToast(`Máximo 10 unidades`, 'error');
         return;
     }
-
-    // Validar stock disponible
     if (nuevaCantidad > item.stock_max) {
-        alert(`Lo sentimos, solo quedan ${item.stock_max} unidades de ${item.name}.`);
+        showToast(`Solo quedan ${item.stock_max} unidades`, 'error');
         return;
     }
 
@@ -143,14 +173,14 @@ function renderCarrito() {
         contenedor.innerHTML = '<p class="vacio">Aún no has agregado nada</p>';
     } else {
         contenedor.innerHTML = carrito.map(item => `
-            <div class="item-carrito">
-                <div class="item-carrito-info">
-                    <strong>${item.name}</strong>
-                    <small>${formatPrice(item.unit_price)} c/u</small>
+            <div class="item-carrito" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 0;">
+                <div>
+                    <strong style="display:block; font-size: 1rem;">${item.name}</strong>
+                    <small style="color: #888;">${formatPrice(item.unit_price)} c/u</small>
                 </div>
-                <div class="item-carrito-controles">
+                <div class="item-carrito-controles" style="display:flex; align-items:center; gap:10px;">
                     <button onclick="cambiarCantidad(${item.product_id}, -1)">−</button>
-                    <span class="cantidad">${item.quantity}</span>
+                    <span class="cantidad" style="font-weight:bold; min-width:20px; text-align:center;">${item.quantity}</span>
                     <button onclick="cambiarCantidad(${item.product_id}, 1)">+</button>
                 </div>
             </div>
@@ -163,16 +193,8 @@ function renderCarrito() {
 
 async function enviarPedido() {
     const nombre = document.getElementById('nombre-cliente').value.trim();
-
-    if (!nombre) {
-        showToast('Escribe tu nombre antes de enviar', 'error');
-        return;
-    }
-
-    if (carrito.length === 0) {
-        showToast('Agrega algo al carrito primero', 'error');
-        return;
-    }
+    if (!nombre) { showToast('Escribe tu nombre antes de enviar', 'error'); return; }
+    if (carrito.length === 0) { showToast('Agrega algo al carrito primero', 'error'); return; }
 
     const btn = document.getElementById('btn-enviar-pedido');
     btn.disabled = true;
@@ -189,8 +211,6 @@ async function enviarPedido() {
         };
 
         const respuesta = await api.createOrder(orden);
-        console.log('✅ Orden creada:', respuesta);
-
         showToast(`¡Pedido #${respuesta.id} enviado! ☕`, 'success');
 
         carrito = [];
@@ -199,7 +219,6 @@ async function enviarPedido() {
         cerrarCarrito();
     } catch (error) {
         showToast('Error al enviar el pedido', 'error');
-        console.error(error);
     } finally {
         btn.disabled = false;
         btn.textContent = 'Enviar pedido';
