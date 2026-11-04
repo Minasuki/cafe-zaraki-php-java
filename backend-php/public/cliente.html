@@ -1,90 +1,93 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>Café Zaraki - Ordena aquí</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/cliente.css">
-</head>
-<body>
-
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/cliente.css" />
+  </head>
+  <body>
     <main class="container">
-        
-        <!-- 1. BANNER DE BIENVENIDA -->
-        <section class="banner-bienvenida">
-            <!-- CAMBIA EL SRC POR TU IMAGEN -->
-            <img src="img/banner-cafe.jpg" alt="Bienvenido a Café Zaraki" class="banner-img">
-            <div class="banner-texto">
-                <h2>¡Bienvenido a Café Zaraki! ☕</h2>
-                <p>El mejor café de la región, directo a tus manos.</p>
-            </div>
-        </section>
+      <!-- 1. BANNER DE BIENVENIDA -->
+      <section class="banner-bienvenida">
+        <!-- CAMBIA EL SRC POR TU IMAGEN -->
+        <img src="img/banner-cafe.jpg" alt="Café Zaraki" class="banner-img" />
+      </section>
 
-        <!-- 2. CATEGORÍAS -->
-        <section class="seccion">
-            <div class="seccion-header">
-                <h3>Categorías</h3>
-            </div>
-            <div class="categorias-scroll" id="categorias">
-                <!-- Se llenan con JS -->
-            </div>
-        </section>
+      <!-- 2. CATEGORÍAS -->
+      <section class="seccion">
+        <div class="seccion-header">
+          <h3>Categorías</h3>
+        </div>
+        <div class="categorias-scroll" id="categorias">
+          <!-- Se llenan con JS -->
+        </div>
+      </section>
 
-        <!-- 3. POPULARES -->
-        <section class="seccion">
-            <div class="seccion-header">
-                <h3>Populares</h3>
-            </div>
-            <div class="populares-scroll" id="populares">
-                <!-- Se llenan con JS (Esqueleto por defecto) -->
-            </div>
-        </section>
+      <!-- 3. POPULARES -->
+      <section class="seccion">
+        <div class="seccion-header">
+          <h3>Populares</h3>
+        </div>
+        <div class="populares-scroll" id="populares">
+          <!-- Se llenan con JS (Esqueleto por defecto) -->
+        </div>
+      </section>
 
-        <!-- 4. TODOS LOS PRODUCTOS -->
-        <section class="seccion">
-            <div class="seccion-header">
-                <h3>Nuestro Menú</h3>
-            </div>
-            <div class="productos-lista" id="productos-lista">
-                <!-- Esqueleto de carga inicial -->
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-            </div>
-        </section>
-
+      <!-- 4. TODOS LOS PRODUCTOS -->
+      <section class="seccion">
+        <div class="seccion-header">
+          <h3>Nuestro Menú</h3>
+        </div>
+        <div class="productos-lista" id="productos-lista">
+          <!-- Esqueleto de carga inicial -->
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </section>
     </main>
 
     <!-- BOTÓN FLOTANTE (FAB) -->
     <button id="btn-carrito" class="fab-carrito">
-        🛒 Ver mi pedido (<span id="contador-carrito">0</span>)
+      🛒 Ver mi pedido (<span id="contador-carrito">0</span>)
     </button>
 
     <!-- CARRITO BOTTOM SHEET -->
     <aside class="carrito-panel" id="carrito-panel">
-        <div class="drag-handle"></div> 
-        <div class="carrito-header">
-            <h2>Tu pedido</h2>
-            <button id="cerrar-carrito" class="btn-cerrar">✕</button>
+      <div class="drag-handle"></div>
+      <div class="carrito-header">
+        <h2>Tu pedido</h2>
+        <button id="cerrar-carrito" class="btn-cerrar">✕</button>
+      </div>
+      <div class="carrito-items" id="carrito-items">
+        <p class="vacio">Aún no has agregado nada</p>
+      </div>
+      <div class="carrito-footer">
+        <div class="total-line">
+          <span>Total:</span>
+          <strong id="total-carrito">$0.00</strong>
         </div>
-        <div class="carrito-items" id="carrito-items">
-            <p class="vacio">Aún no has agregado nada</p>
-        </div>
-        <div class="carrito-footer">
-            <div class="total-line">
-                <span>Total:</span>
-                <strong id="total-carrito">$0.00</strong>
-            </div>
-            <input type="text" id="nombre-cliente" placeholder="Tu nombre para el pedido" required>
-            <button id="btn-enviar-pedido" class="btn-primary btn-block">Enviar pedido</button>
-        </div>
+        <input
+          type="text"
+          id="nombre-cliente"
+          placeholder="Tu nombre para el pedido"
+          required
+        />
+        <button id="btn-enviar-pedido" class="btn-primary btn-block">
+          Enviar pedido
+        </button>
+      </div>
     </aside>
 
     <div class="overlay" id="overlay"></div>
 
     <script src="js/api.js"></script>
     <script src="js/cliente.js"></script>
-</body>
+  </body>
 </html>
