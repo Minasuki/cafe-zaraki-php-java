@@ -2,9 +2,7 @@
 
 let productos = [];
 let carrito = [];
-let productoEditandoIndex = null; // Para saber si estamos editando el carrito
-let opcionesSeleccionadas = {}; // Guarda temporalmente lo que elige el usuario
-let productoActual = null; // Guarda el producto que se está viendo
+let seleccionesTemporales = {};
 
 document.addEventListener("DOMContentLoaded", async () => {
   await cargarProductos();
@@ -88,14 +86,13 @@ function renderCategorias() {
 
 // 2. RENDERIZAR POPULARES
 function renderPopulares() {
-  // Tomamos los primeros 4 productos como "Populares"
   const populares = productos.slice(0, 4);
   const contenedor = document.getElementById("populares");
 
   contenedor.innerHTML = populares
     .map(
       (p) => `
-        <div class="popular-card" onclick="agregarAlCarrito(${p.id})">
+        <div class="popular-card" onclick="abrirDesdePopulares(${p.id})">
             <img src="img/${p.id}.jpg" alt="${p.name}" onerror="this.src='https://placehold.co/400x400/2c1e17/ffffff?text=Cafe'">
             <div class="popular-info">
                 <h4>${p.name}</h4>
@@ -105,6 +102,22 @@ function renderPopulares() {
     `,
     )
     .join("");
+}
+
+function abrirDesdePopulares(productId) {
+  // Hacer scroll hacia la lista principal
+  document
+    .getElementById("productos-lista")
+    .scrollIntoView({ behavior: "smooth" });
+
+  // Abrir las opciones del producto después de un pequeño delay
+  setTimeout(() => {
+    // Cerrar otros
+    document
+      .querySelectorAll(".producto-card")
+      .forEach((c) => c.classList.remove("open"));
+    toggleOpciones(productId);
+  }, 500);
 }
 
 // 3. RENDERIZAR LISTA DE PRODUCTOS (Tarjeta completa clickeable)
@@ -120,14 +133,19 @@ function renderProductosLista(lista) {
   contenedor.innerHTML = lista
     .map(
       (p) => `
-        <!-- EL ONCLICK ESTÁ EN TODO EL DIV -->
-        <div class="producto-card" onclick="agregarAlCarrito(${p.id})">
-            <img src="img/${p.id}.jpg" alt="${p.name}" onerror="this.src='https://placehold.co/400x400/2c1e17/ffffff?text=Cafe'">
-            <div class="producto-card-info">
-                <h4>${p.name}</h4>
-                <div class="precio">${formatPrice(p.price)}</div>
+        <div class="producto-card" id="prod-${p.id}">
+            <!-- Cabecera clickeable -->
+            <div class="producto-header" onclick="toggleOpciones(${p.id})">
+                <img src="img/${p.id}.jpg" alt="${p.name}" onerror="this.src='https://placehold.co/400x400/2c1e17/ffffff?text=Cafe'">
+                <div class="producto-card-info">
+                    <h4>${p.name}</h4>
+                    <div class="precio">${formatPrice(p.price)}</div>
+                </div>
+                <div class="btn-add-icon">+</div>
             </div>
-            <div class="btn-add-icon">+</div>
+            
+            <!-- Contenedor del acordeón (vacío al inicio) -->
+            <div class="producto-opciones" id="opciones-${p.id}"></div>
         </div>
     `,
     )
@@ -148,59 +166,73 @@ function agregarAlCarrito(productId, indexCarrito = null) {
   }
 }
 
-function abrirOpciones(producto, indexCarrito) {
-  productoActual = producto;
-  productoEditandoIndex = indexCarrito;
-  opcionesSeleccionadas = {}; // Resetear
+// --- LÓGICA DEL ACORDEÓN DE OPCIONES ---
 
-  document.getElementById("opt-product-name").textContent = producto.name;
+function toggleOpciones(productId) {
+  const producto = productos.find((p) => p.id === productId);
+  const card = document.getElementById(`prod-${productId}`);
 
-  // Si estamos editando, cargamos lo que ya tenía seleccionado
-  if (indexCarrito !== null) {
-    const item = carrito[indexCarrito];
-    // (Aquí en un caso real re-seleccionaríamos los radios, pero para simplificar
-    // el usuario simplemente volverá a elegir).
-    document.getElementById("btn-confirm-options").textContent =
-      "Guardar cambios";
-  } else {
-    document.getElementById("btn-confirm-options").textContent =
-      "Agregar al carrito";
+  // Si es panadería o pastelería, se agrega directo sin abrir acordeón
+  if (producto.category !== "Bebidas" || producto.name.includes("Agua")) {
+    guardarEnCarrito(producto, null, [], parseFloat(producto.price));
+    return;
   }
 
-  renderOpcionesUI();
-  actualizarPrecioOpciones();
+  // Si la tarjeta ya está abierta, la cerramos
+  if (card.classList.contains("open")) {
+    card.classList.remove("open");
+    return;
+  }
 
-  // Abrir panel y deshabilitar botón
-  document.getElementById("options-panel").classList.add("open");
-  document.getElementById("overlay").classList.add("show");
-  document.getElementById("btn-confirm-options").disabled = true;
+  // Cerrar cualquier otro acordeón abierto
+  document
+    .querySelectorAll(".producto-card")
+    .forEach((c) => c.classList.remove("open"));
+
+  // Abrir esta tarjeta
+  card.classList.add("open");
+
+  // Si aún no se ha dibujado el HTML de las opciones, lo dibujamos
+  const contenedorOpciones = document.getElementById(`opciones-${productId}`);
+  if (contenedorOpciones.innerHTML.trim() === "") {
+    seleccionesTemporales[productId] = {}; // Inicializar
+
+    contenedorOpciones.innerHTML = `
+            <div class="opciones-inner">
+                ${opcionesBebidas
+                  .map(
+                    (grupo) => `
+                    <div class="option-group">
+                        <h4>${grupo.titulo} <span class="req">*Requerido</span></h4>
+                        ${grupo.opciones
+                          .map(
+                            (op) => `
+                            <label class="option-label" onclick="seleccionarOpcionAcordeon(${productId}, '${grupo.id}', '${op.valor}', ${op.extra}, this)">
+                                <span class="opt-name">${op.valor}</span>
+                                ${op.extra > 0 ? `<span class="opt-price">+${formatPrice(op.extra)}</span>` : ""}
+                            </label>
+                        `,
+                          )
+                          .join("")}
+                    </div>
+                `,
+                  )
+                  .join("")}
+                <button class="btn-primary btn-agregar-acordeon" id="btn-add-${productId}" disabled onclick="confirmarAgregar(${productId})">
+                    Agregar al carrito
+                </button>
+            </div>
+        `;
+  }
 }
 
-function renderOpcionesUI() {
-  const contenedor = document.getElementById("options-body");
-  contenedor.innerHTML = opcionesBebidas
-    .map(
-      (grupo) => `
-        <div class="option-group" data-group="${grupo.id}">
-            <h4>${grupo.titulo} <span class="req">*Requerido</span></h4>
-            ${grupo.opciones
-              .map(
-                (op) => `
-                <label class="option-label" onclick="seleccionarOpcion('${grupo.id}', '${op.valor}', ${op.extra}, this)">
-                    <span class="opt-name">${op.valor}</span>
-                    ${op.extra > 0 ? `<span class="opt-price">+${formatPrice(op.extra)}</span>` : ""}
-                    <input type="radio" name="${grupo.id}" value="${op.valor}">
-                </label>
-            `,
-              )
-              .join("")}
-        </div>
-    `,
-    )
-    .join("");
-}
-
-function seleccionarOpcion(grupoId, valor, extra, labelElement) {
+function seleccionarOpcionAcordeon(
+  productId,
+  grupoId,
+  valor,
+  extra,
+  labelElement,
+) {
   // Quitar la clase 'selected' de los hermanos
   const hermanos = labelElement.parentElement.querySelectorAll(".option-label");
   hermanos.forEach((h) => h.classList.remove("selected"));
@@ -208,56 +240,50 @@ function seleccionarOpcion(grupoId, valor, extra, labelElement) {
   // Ponerla en el actual
   labelElement.classList.add("selected");
 
-  // Guardar en memoria
-  opcionesSeleccionadas[grupoId] = { valor, extra };
+  // Guardar en memoria temporal
+  if (!seleccionesTemporales[productId]) seleccionesTemporales[productId] = {};
+  seleccionesTemporales[productId][grupoId] = { valor, extra };
 
-  actualizarPrecioOpciones();
-  verificarBotonHabilitado();
-}
-
-function actualizarPrecioOpciones() {
-  let total = parseFloat(productoActual.price);
-  for (const key in opcionesSeleccionadas) {
-    total += opcionesSeleccionadas[key].extra;
-  }
-  document.getElementById("opt-total-price").textContent = formatPrice(total);
-}
-
-function verificarBotonHabilitado() {
-  // Contar cuántos grupos requeridos hay
+  // Verificar si ya seleccionó todas las opciones requeridas
   const totalRequeridos = opcionesBebidas.length;
-  // Contar cuántos se han seleccionado
-  const seleccionados = Object.keys(opcionesSeleccionadas).length;
+  const seleccionados = Object.keys(seleccionesTemporales[productId]).length;
 
-  document.getElementById("btn-confirm-options").disabled =
-    seleccionados < totalRequeridos;
+  const btn = document.getElementById(`btn-add-${productId}`);
+  if (seleccionados >= totalRequeridos) {
+    btn.disabled = false;
+    // Actualizar el precio del botón para mostrar el total con extras
+    let precioFinal = parseFloat(
+      productos.find((p) => p.id === productId).price,
+    );
+    for (const key in seleccionesTemporales[productId]) {
+      precioFinal += seleccionesTemporales[productId][key].extra;
+    }
+    btn.textContent = `Agregar al carrito - ${formatPrice(precioFinal)}`;
+  }
 }
 
-// El botón de confirmar opciones
-document.getElementById("btn-confirm-options").addEventListener("click", () => {
-  // Crear un arreglo con las opciones elegidas para guardarlo en el carrito
-  const opcionesFinales = Object.values(opcionesSeleccionadas).map(
-    (o) => o.valor,
-  );
+function confirmarAgregar(productId) {
+  const producto = productos.find((p) => p.id === productId);
+  const selecciones = seleccionesTemporales[productId];
 
-  // Calcular el precio final con los extras
-  let precioFinal = parseFloat(productoActual.price);
-  for (const key in opcionesSeleccionadas) {
-    precioFinal += opcionesSeleccionadas[key].extra;
+  let precioFinal = parseFloat(producto.price);
+  const opcionesFinales = [];
+
+  for (const key in selecciones) {
+    precioFinal += selecciones[key].extra;
+    opcionesFinales.push(selecciones[key].valor);
   }
 
-  // Aquí pasamos los datos a la función que guarda
-  guardarEnCarrito(
-    productoActual,
-    productoEditandoIndex,
-    opcionesFinales,
-    precioFinal,
-  );
+  // Guardar en carrito
+  guardarEnCarrito(producto, null, opcionesFinales, precioFinal);
 
-  // Cerrar panel
-  document.getElementById("options-panel").classList.remove("open");
-  document.getElementById("overlay").classList.remove("show");
-});
+  // Cerrar acordeón y limpiar memoria
+  document.getElementById(`prod-${productId}`).classList.remove("open");
+  seleccionesTemporales[productId] = {};
+
+  // Resetear el HTML interno para que la próxima vez esté limpio
+  document.getElementById(`opciones-${productId}`).innerHTML = "";
+}
 
 // CONFIGURACIÓN DE OPCIONES POR CATEGORÍA O PRODUCTO
 // Si el producto es "Bebidas" (excepto agua), le pedirá estas opciones.
@@ -326,10 +352,6 @@ function configurarEventos() {
   document
     .getElementById("cerrar-carrito")
     .addEventListener("click", cerrarCarrito);
-  document.getElementById("cerrar-options").addEventListener("click", () => {
-    document.getElementById("options-panel").classList.remove("open");
-    document.getElementById("overlay").classList.remove("show");
-  });
   document.getElementById("overlay").addEventListener("click", () => {
     cerrarCarrito();
     document.getElementById("options-panel").classList.remove("open");
@@ -440,11 +462,13 @@ async function enviarPedido() {
 function abrirCarrito() {
   document.getElementById("carrito-panel").classList.add("open");
   document.getElementById("overlay").classList.add("show");
+  document.body.style.overflow = "hidden"; // <-- Bloquea el scroll del fondo
 }
 
 function cerrarCarrito() {
   document.getElementById("carrito-panel").classList.remove("open");
   document.getElementById("overlay").classList.remove("show");
+  document.body.style.overflow = ""; // <-- Devuelve el scroll normal
 }
 
 function configurarEventos() {

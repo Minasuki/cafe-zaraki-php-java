@@ -183,15 +183,13 @@ body {
 }
 
 .producto-card {
-  background: #2c1e17;
-  border-radius: 16px;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
-  transition: transform 0.1s;
-  border: 1px solid #3a2820;
+    background: #2c1e17;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column; /* Ahora es columna para que el acordeón baje */
+    border: 1px solid #3a2820;
+    overflow: hidden; /* Corta el contenido cuando está cerrado */
+    transition: all 0.3s ease;
 }
 
 .producto-card:active {
@@ -233,6 +231,120 @@ body {
   align-items: center;
   font-size: 1.2rem;
   flex-shrink: 0;
+}
+
+.producto-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    gap: 16px;
+    cursor: pointer; /* Toda esta zona es clickeable */
+    transition: background 0.2s;
+}
+
+.producto-header:active {
+    background: #3a2820;
+}
+
+.producto-header img {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.producto-card-info {
+    flex-grow: 1;
+}
+
+.producto-card-info h4 {
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.producto-card-info .precio {
+    color: var(--color-latte);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* El icono que cambia de + a flecha */
+.btn-add-icon {
+    background: var(--color-cafe);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    transition: transform 0.3s ease, background 0.3s;
+}
+
+* Cuando está abierto, la flecha apunta hacia arriba y cambia de color */
+.producto-card.open .btn-add-icon {
+    transform: rotate(180deg);
+    background: #ff9800; 
+}
+
+/* Contenedor de las opciones (Oculto por defecto) */
+.producto-opciones {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out;
+    background: #221610; /* Un tono un poco más oscuro */
+}
+
+/* Cuando está abierto, se expande */
+.producto-card.open .producto-opciones {
+    max-height: 800px; /* Un valor alto para que quepa todo */
+    border-top: 1px solid #3a2820;
+}
+
+.opciones-inner {
+    padding: 16px;
+}
+
+/* Estilos de los botones de opciones (reutilizamos los del paso anterior) */
+.option-group { margin-bottom: 16px; }
+.option-group h4 { color: #f5ebe0; margin-bottom: 8px; font-size: 0.9rem; display: flex; justify-content: space-between; }
+.option-group h4 span.req { color: #e53935; font-size: 0.75rem; }
+
+.option-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #2c1e17;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+.option-label.selected {
+    border-color: var(--color-cafe);
+    background: #3a2820;
+}
+.option-label input { display: none; }
+.option-label .opt-name { color: white; font-size: 0.9rem; }
+.option-label .opt-price { color: var(--color-latte); font-weight: bold; font-size: 0.85rem; }
+
+/* Botón de agregar dentro del acordeón */
+.btn-agregar-acordeon {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 1rem;
+    border-radius: 8px;
+}
+.btn-agregar-acordeon:disabled {
+    background: #555;
+    color: #999;
+    cursor: not-allowed;
 }
 
 /* SKELETON LOADER (Efecto de carga) */
