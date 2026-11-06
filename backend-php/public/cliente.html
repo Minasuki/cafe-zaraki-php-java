@@ -85,6 +85,30 @@
       </div>
     </aside>
 
+    <!-- PANEL DE OPCIONES DEL PRODUCTO -->
+    <aside class="options-panel" id="options-panel">
+      <div class="drag-handle"></div>
+      <div class="options-header">
+        <h2 id="opt-product-name">Nombre del Producto</h2>
+        <button id="cerrar-options" class="btn-cerrar">✕</button>
+      </div>
+
+      <div class="options-body" id="options-body">
+        <!-- Aquí JavaScript inyectará las preguntas (Tamaño, Azúcar, etc.) -->
+      </div>
+
+      <div class="options-footer">
+        <div class="total-line">
+          <span>Total:</span>
+          <strong id="opt-total-price">$0.00</strong>
+        </div>
+        <!-- Este botón estará deshabilitado hasta que se seleccionen todas las opciones -->
+        <button id="btn-confirm-options" class="btn-primary btn-block" disabled>
+          Agregar al carrito
+        </button>
+      </div>
+    </aside>
+
     <div class="overlay" id="overlay"></div>
 
     <script src="js/api.js"></script>

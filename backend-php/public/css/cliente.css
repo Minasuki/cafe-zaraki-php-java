@@ -361,3 +361,81 @@ body {
   border: none;
   border-radius: 50%;
 }
+
+/* ============ PANEL DE OPCIONES DEL PRODUCTO ============ */
+.options-panel {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    height: 80vh;
+    background: #1a110d;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 110; /* Por encima del carrito */
+    border-top: 1px solid #3a2820;
+}
+.options-panel.open { bottom: 0; }
+
+.options-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #3a2820;
+    color: white;
+}
+.options-header h2 { font-size: 1.3rem; }
+
+.options-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* Grupos de opciones */
+.option-group {
+    margin-bottom: 24px;
+}
+.option-group h4 {
+    color: #f5ebe0;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    display: flex;
+    justify-content: space-between;
+}
+.option-group h4 span.req { color: #e53935; font-size: 0.8rem; }
+
+/* Botones de selección (Radio buttons estilizados) */
+.option-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #2c1e17;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+.option-label:hover { background: #3a2820; }
+.option-label.selected {
+    border-color: var(--color-cafe);
+    background: #3a2820;
+}
+.option-label input { display: none; } /* Ocultamos el radio button feo */
+.option-label .opt-name { color: white; font-size: 0.95rem; }
+.option-label .opt-price { color: var(--color-latte); font-weight: bold; }
+
+.options-footer {
+    padding: 16px 20px 32px 20px;
+    border-top: 1px solid #3a2820;
+    background: #1a110d;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}

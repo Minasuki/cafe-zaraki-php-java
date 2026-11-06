@@ -37,7 +37,7 @@ try {
 
             // Traer los ítems con nombre del producto
             $stmtItems = $pdo->prepare("
-                SELECT oi.id, oi.product_id, oi.quantity, oi.unit_price, p.name AS product_name
+                SELECT oi.id, oi.product_id, oi.quantity, oi.unit_price, oi.customizations, p.name AS product_name
                 FROM order_items oi
                 JOIN products p ON oi.product_id = p.id
                 WHERE oi.order_id = :id
@@ -129,16 +129,22 @@ try {
 
         // Insertar items
         $stmtItem = $pdo->prepare("
-            INSERT INTO order_items (order_id, product_id, quantity, unit_price)
-            VALUES (:order_id, :product_id, :quantity, :unit_price)
+            INSERT INTO order_items (order_id, product_id, quantity, unit_price, customizations)
+            VALUES (:order_id, :product_id, :quantity, :unit_price, :customizations)
         ");
 
         foreach ($body['items'] as $item) {
+            // Si el item trae personalizaciones, las convertimos a texto. Si no, guardamos NULL.
+            $custom = isset($item['customizations']) && is_array($item['customizations'])
+                ? implode(', ', $item['customizations'])
+                : null;
+
             $stmtItem->execute([
                 ':order_id' => $order_id,
                 ':product_id' => $item['product_id'],
                 ':quantity' => $item['quantity'],
                 ':unit_price' => $item['unit_price'],
+                ':customizations' => $custom
             ]);
         }
 
