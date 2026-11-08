@@ -61,7 +61,7 @@ try {
         }
     } else {
         // Para los otros estados (preparing, ready), seguimos usando PHP normal
-        $valid_statuses = ['pending', 'preparing', 'ready'];
+        $valid_statuses = ['pending', 'preparing', 'ready', 'paid', 'cancelled'];
         if (!in_array($status, $valid_statuses)) {
             http_response_code(400);
             echo json_encode(['error' => 'Estado inválido.']);

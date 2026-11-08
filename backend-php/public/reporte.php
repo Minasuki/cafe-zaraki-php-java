@@ -7,39 +7,48 @@ if (!isset($_SESSION['usuario_id'])) {
 require_once __DIR__ . '/../config.php';
 
 try {
+    // Capturamos el periodo (por defecto 'month')
+$periodo = $_GET['periodo'] ?? 'month';
+$fecha_condicion = "";
+
+if ($periodo === 'today') {
+    $fecha_condicion = "AND DATE(o.created_at) = CURRENT_DATE";
+} elseif ($periodo === 'week') {
+    $fecha_condicion = "AND o.created_at >= NOW() - INTERVAL 7 DAY";
+} else {
+    $fecha_condicion = "AND o.created_at >= NOW() - INTERVAL 1 MONTH"; // month
+}
+
     // Reporte 1: Ventas totales por producto (JOIN y GROUP BY)
     $query1 = "
-        SELECT p.name AS producto, 
-               SUM(oi.quantity) AS total_vendido, 
-               SUM(oi.quantity * oi.unit_price) AS ingresos
-        FROM order_items oi
-        JOIN products p ON oi.product_id = p.id
-        JOIN orders o ON oi.order_id = o.id
-        WHERE o.status = 'paid'
-        GROUP BY p.id, p.name
-        ORDER BY total_vendido DESC
-    ";
+    SELECT p.name AS producto, SUM(oi.quantity) AS total_vendido, SUM(oi.quantity * oi.unit_price) AS ingresos
+    FROM order_items oi
+    JOIN products p ON oi.product_id = p.id
+    JOIN orders o ON oi.order_id = o.id
+    WHERE o.status = 'paid' $fecha_condicion
+    GROUP BY p.id, p.name
+    ORDER BY total_vendido DESC
+";
     $stmt1 = $pdo->query($query1);
     $ventasPorProducto = $stmt1->fetchAll();
 
     // Reporte 2: Productos estrella (Usando HAVING para filtrar)
     // Muestra solo los productos que han vendido MÁS de 2 unidades
-    $query2 = "
-        SELECT p.name AS producto, 
-               SUM(oi.quantity) AS total_vendido
-        FROM order_items oi
-        JOIN products p ON oi.product_id = p.id
-        JOIN orders o ON oi.order_id = o.id
-        WHERE o.status = 'paid'
-        GROUP BY p.id, p.name
-        HAVING SUM(oi.quantity) > 2
-        ORDER BY total_vendido DESC
-    ";
+   $query2 = "
+    SELECT p.name AS producto, SUM(oi.quantity) AS total_vendido
+    FROM order_items oi
+    JOIN products p ON oi.product_id = p.id
+    JOIN orders o ON oi.order_id = o.id
+    WHERE o.status = 'paid' $fecha_condicion
+    GROUP BY p.id, p.name
+    HAVING SUM(oi.quantity) > 2
+    ORDER BY total_vendido DESC
+";
     $stmt2 = $pdo->query($query2);
     $productosEstrella = $stmt2->fetchAll();
 
     // Reporte 3: Ingresos totales
-    $query3 = "SELECT SUM(total) AS ingresos_totales FROM orders WHERE status = 'paid'";
+    $query3 = "SELECT SUM(total) AS ingresos_totales FROM orders o WHERE o.status = 'paid' $fecha_condicion";
     $ingresosTotales = $pdo->query($query3)->fetch()['ingresos_totales'] ?? 0;
 
 } catch (Exception $e) {
@@ -71,6 +80,15 @@ try {
             <h2>$<?= number_format($ingresosTotales, 2) ?></h2>
             <p>Ingresos Totales (Órdenes Pagadas)</p>
         </div>
+
+        <!-- Filtro de periodo -->
+        <form method="GET" style="text-align: center; margin-bottom: 20px;">
+            <select name="periodo" onchange="this.form.submit()" style="padding: 10px; border-radius: 6px; font-size: 1rem;">
+                <option value="today" <?= $periodo === 'today' ? 'selected' : '' ?>>Hoy</option>
+                <option value="week" <?= $periodo === 'week' ? 'selected' : '' ?>>Última semana</option>
+                <option value="month" <?= $periodo === 'month' ? 'selected' : '' ?>>Último mes</option>
+            </select>
+        </form>
 
         <div class="reporte-grid">
             <!-- Tabla 1: Ventas por Producto -->
