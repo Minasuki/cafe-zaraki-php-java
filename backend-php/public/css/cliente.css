@@ -279,15 +279,18 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.2rem;
+    font-size: 1.3rem; /* Un poco más grande para que se vea bien */
+    font-weight: bold;
     flex-shrink: 0;
     transition: transform 0.3s ease, background 0.3s;
+    padding-bottom: 2px; /* Ajuste milimétrico para que el símbolo quede centrado */
 }
 
-* Cuando está abierto, la flecha apunta hacia arriba y cambia de color */
+/* Cuando está abierto, la flecha apunta hacia arriba y cambia de color */
 .producto-card.open .btn-add-icon {
     transform: rotate(180deg);
     background: #ff9800; 
+    transform: rotate(180deg);
 }
 
 /* Contenedor de las opciones (Oculto por defecto) */

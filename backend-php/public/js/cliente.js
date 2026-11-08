@@ -141,7 +141,7 @@ function renderProductosLista(lista) {
                     <h4>${p.name}</h4>
                     <div class="precio">${formatPrice(p.price)}</div>
                 </div>
-                <div class="btn-add-icon">+</div>
+                <div class="btn-add-icon">∨</div>
             </div>
             
             <!-- Contenedor del acordeón (vacío al inicio) -->
@@ -169,35 +169,38 @@ function agregarAlCarrito(productId, indexCarrito = null) {
 // --- LÓGICA DEL ACORDEÓN DE OPCIONES ---
 
 function toggleOpciones(productId) {
-    const producto = productos.find(p => p.id === productId);
-    const card = document.getElementById(`prod-${productId}`);
+  const producto = productos.find((p) => p.id === productId);
+  const card = document.getElementById(`prod-${productId}`);
 
-    if (producto.category !== 'Bebidas' || producto.name.includes('Agua')) {
-        guardarEnCarrito(producto, null, [], parseFloat(producto.price));
-        return;
-    }
+  if (producto.category !== "Bebidas" || producto.name.includes("Agua")) {
+    guardarEnCarrito(producto, null, [], parseFloat(producto.price));
+    return;
+  }
 
-    if (card.classList.contains('open')) {
-        card.classList.remove('open');
-        document.body.classList.remove('acordeon-abierto'); // Mostrar FAB
-        return;
-    }
+  if (card.classList.contains("open")) {
+    card.classList.remove("open");
+    document.body.classList.remove("acordeon-abierto"); // Mostrar FAB
+    return;
+  }
 
-    document.querySelectorAll('.producto-card').forEach(c => c.classList.remove('open'));
-    card.classList.add('open');
-    document.body.classList.add('acordeon-abierto'); // Ocultar FAB
+  document
+    .querySelectorAll(".producto-card")
+    .forEach((c) => c.classList.remove("open"));
+  card.classList.add("open");
+  document.body.classList.add("acordeon-abierto"); // Ocultar FAB
 
-    const contenedorOpciones = document.getElementById(`opciones-${productId}`);
-    if (contenedorOpciones.innerHTML.trim() === '') {
-        seleccionesTemporales[productId] = {}; 
-        
-        // Generar el HTML
-        contenedorOpciones.innerHTML = `
+  const contenedorOpciones = document.getElementById(`opciones-${productId}`);
+  if (contenedorOpciones.innerHTML.trim() === "") {
+    seleccionesTemporales[productId] = {};
+
+    // Generar el HTML
+    contenedorOpciones.innerHTML = `
             <div class="opciones-inner">
-                ${opcionesBebidas.map(grupo => {
+                ${opcionesBebidas
+                  .map((grupo) => {
                     // Si es de tipo contador, generamos un HTML diferente
-                    if (grupo.tipo === 'contador') {
-                        return `
+                    if (grupo.tipo === "contador") {
+                      return `
                             <div class="option-group">
                                 <h4>${grupo.titulo} <span class="req">*Requerido</span></h4>
                                 <div class="contador-wrapper">
@@ -211,26 +214,31 @@ function toggleOpciones(productId) {
                             </div>
                         `;
                     } else {
-                        // Si es de tipo radio normal
-                        return `
+                      // Si es de tipo radio normal
+                      return `
                             <div class="option-group">
                                 <h4>${grupo.titulo} <span class="req">*Requerido</span></h4>
-                                ${grupo.opciones.map(op => `
+                                ${grupo.opciones
+                                  .map(
+                                    (op) => `
                                     <label class="option-label" onclick="seleccionarOpcionAcordeon(${productId}, '${grupo.id}', '${op.valor}', ${op.extra}, this)">
                                         <span class="opt-name">${op.valor}</span>
-                                        ${op.extra > 0 ? `<span class="opt-price">+${formatPrice(op.extra)}</span>` : ''}
+                                        ${op.extra > 0 ? `<span class="opt-price">+${formatPrice(op.extra)}</span>` : ""}
                                     </label>
-                                `).join('')}
+                                `,
+                                  )
+                                  .join("")}
                             </div>
                         `;
                     }
-                }).join('')}
+                  })
+                  .join("")}
                 <button class="btn-primary btn-agregar-acordeon" id="btn-add-${productId}" disabled onclick="confirmarAgregar(${productId})">
                     Agregar al carrito
                 </button>
             </div>
         `;
-    }
+  }
 }
 
 function seleccionarOpcionAcordeon(
@@ -270,108 +278,115 @@ function seleccionarOpcionAcordeon(
 }
 
 function cambiarContador(productId, grupoId, delta, min, max) {
-    if (!seleccionesTemporales[productId]) seleccionesTemporales[productId] = {};
-    
-    // Obtener valor actual o inicializarlo en 0
-    let valorActual = seleccionesTemporales[productId][grupoId] ? seleccionesTemporales[productId][grupoId].qty : 0;
-    let nuevoValor = valorActual + delta;
+  if (!seleccionesTemporales[productId]) seleccionesTemporales[productId] = {};
 
-    if (nuevoValor < min || nuevoValor > max) return; // Respetar límites
+  // Obtener valor actual o inicializarlo en 0
+  let valorActual = seleccionesTemporales[productId][grupoId]
+    ? seleccionesTemporales[productId][grupoId].qty
+    : 0;
+  let nuevoValor = valorActual + delta;
 
-    // Actualizar UI
-    document.getElementById(`val-${productId}-${grupoId}`).textContent = nuevoValor;
+  if (nuevoValor < min || nuevoValor > max) return; // Respetar límites
 
-    // Guardar en memoria
-    seleccionesTemporales[productId][grupoId] = { 
-        qty: nuevoValor, 
-        valor: `${nuevoValor} cucharada(s)`,
-        extra: 0 // Si quisieras cobrar por cucharada, iría aquí
-    };
+  // Actualizar UI
+  document.getElementById(`val-${productId}-${grupoId}`).textContent =
+    nuevoValor;
 
-    verificarBotonAcordeon(productId);
+  // Guardar en memoria
+  seleccionesTemporales[productId][grupoId] = {
+    qty: nuevoValor,
+    valor: `${nuevoValor} cucharada(s)`,
+    extra: 0, // Si quisieras cobrar por cucharada, iría aquí
+  };
+
+  verificarBotonAcordeon(productId);
 }
 
 function verificarBotonAcordeon(productId) {
-    const totalRequeridos = opcionesBebidas.length;
-    const seleccionados = Object.keys(seleccionesTemporales[productId] || {}).length;
+  const totalRequeridos = opcionesBebidas.length;
+  const seleccionados = Object.keys(
+    seleccionesTemporales[productId] || {},
+  ).length;
 
-    const btn = document.getElementById(`btn-add-${productId}`);
-    if (seleccionados >= totalRequeridos) {
-        btn.disabled = false;
-        let precioFinal = parseFloat(productos.find(p => p.id === productId).price);
-        for (const key in seleccionesTemporales[productId]) {
-            precioFinal += seleccionesTemporales[productId][key].extra || 0;
-        }
-        btn.textContent = `Agregar al carrito - ${formatPrice(precioFinal)}`;
+  const btn = document.getElementById(`btn-add-${productId}`);
+  if (seleccionados >= totalRequeridos) {
+    btn.disabled = false;
+    let precioFinal = parseFloat(
+      productos.find((p) => p.id === productId).price,
+    );
+    for (const key in seleccionesTemporales[productId]) {
+      precioFinal += seleccionesTemporales[productId][key].extra || 0;
     }
+    btn.textContent = `Agregar al carrito - ${formatPrice(precioFinal)}`;
+  }
 }
 
 function confirmarAgregar(productId) {
-    const producto = productos.find(p => p.id === productId);
-    const selecciones = seleccionesTemporales[productId];
-    
-    let precioFinal = parseFloat(producto.price);
-    const opcionesFinales = [];
-    
-    for (const key in selecciones) {
-        // Solo sumar extra si existe
-        if (selecciones[key].extra) precioFinal += selecciones[key].extra;
-        // Guardar el texto de la opción elegida
-        opcionesFinales.push(selecciones[key].valor);
-    }
+  const producto = productos.find((p) => p.id === productId);
+  const selecciones = seleccionesTemporales[productId];
 
-    guardarEnCarrito(producto, null, opcionesFinales, precioFinal);
-    
-    // Cerrar acordeón, mostrar FAB y limpiar
-    document.getElementById(`prod-${productId}`).classList.remove('open');
-    document.body.classList.remove('acordeon-abierto'); // <-- Volver a mostrar FAB
-    seleccionesTemporales[productId] = {};
-    document.getElementById(`opciones-${productId}`).innerHTML = '';
+  let precioFinal = parseFloat(producto.price);
+  const opcionesFinales = [];
+
+  for (const key in selecciones) {
+    // Solo sumar extra si existe
+    if (selecciones[key].extra) precioFinal += selecciones[key].extra;
+    // Guardar el texto de la opción elegida
+    opcionesFinales.push(selecciones[key].valor);
+  }
+
+  guardarEnCarrito(producto, null, opcionesFinales, precioFinal);
+
+  // Cerrar acordeón, mostrar FAB y limpiar
+  document.getElementById(`prod-${productId}`).classList.remove("open");
+  document.body.classList.remove("acordeon-abierto"); // <-- Volver a mostrar FAB
+  seleccionesTemporales[productId] = {};
+  document.getElementById(`opciones-${productId}`).innerHTML = "";
 }
 
 // CONFIGURACIÓN DE OPCIONES POR CATEGORÍA O PRODUCTO
 // Si el producto es "Bebidas" (excepto agua), le pedirá estas opciones.
 const opcionesBebidas = [
-    {
-        id: 'tamano',
-        titulo: 'Tamaño de la bebida',
-        requerido: true,
-        opciones: [
-            { valor: 'Chico (8oz)', extra: 0 },
-            { valor: 'Mediano (12oz)', extra: 10 },
-            { valor: 'Grande (16oz)', extra: 15 }
-        ]
-    },
-    {
-        id: 'cafeina',
-        titulo: 'Cafeína',
-        requerido: true,
-        opciones: [
-            { valor: 'Con cafeína', extra: 0 },
-            { valor: 'Descafeinado', extra: 0 }
-        ]
-    },
-    {
-        id: 'endulzante',
-        titulo: 'Tipo de Endulzante',
-        requerido: true,
-        opciones: [
-            { valor: 'Azúcar normal', extra: 0 },
-            { valor: 'Splenda', extra: 0 },
-            { valor: 'Miel', extra: 5 },
-            { valor: 'Mascabo', extra: 0 },
-            { valor: 'Sin azúcar', extra: 0 }
-        ]
-    },
-    {
-        id: 'cucharadas',
-        titulo: 'Cantidad de cucharadas', // <-- NUEVA OPCIÓN
-        requerido: true,
-        tipo: 'contador', // Le decimos que será un contador
-        min: 0,
-        max: 5,
-        extraPorUnidad: 0 // Si cada cucharada costara extra, se pone aquí
-    }
+  {
+    id: "tamano",
+    titulo: "Tamaño de la bebida",
+    requerido: true,
+    opciones: [
+      { valor: "Chico (8oz)", extra: 0 },
+      { valor: "Mediano (12oz)", extra: 10 },
+      { valor: "Grande (16oz)", extra: 15 },
+    ],
+  },
+  {
+    id: "cafeina",
+    titulo: "Cafeína",
+    requerido: true,
+    opciones: [
+      { valor: "Con cafeína", extra: 0 },
+      { valor: "Descafeinado", extra: 0 },
+    ],
+  },
+  {
+    id: "endulzante",
+    titulo: "Tipo de Endulzante",
+    requerido: true,
+    opciones: [
+      { valor: "Azúcar normal", extra: 0 },
+      { valor: "Splenda", extra: 0 },
+      { valor: "Miel", extra: 5 },
+      { valor: "Mascabo", extra: 0 },
+      { valor: "Sin azúcar", extra: 0 },
+    ],
+  },
+  {
+    id: "cucharadas",
+    titulo: "Cantidad de cucharadas", // <-- NUEVA OPCIÓN
+    requerido: true,
+    tipo: "contador", // Le decimos que será un contador
+    min: 0,
+    max: 5,
+    extraPorUnidad: 0, // Si cada cucharada costara extra, se pone aquí
+  },
 ];
 
 function cambiarCantidad(index, delta) {
@@ -439,7 +454,7 @@ function renderCarrito() {
                     <strong style="display:block; font-size: 1rem;">${item.name}</strong>
                     ${opcionesTexto}
                     <div style="margin-top: 6px;">
-                        <button onclick="editarItemCarrito(${index})" style="background:transparent; border:none; color:#ff9800; font-size:0.85rem; padding:0; cursor:pointer; text-decoration:underline;">✏️ Editar</button>
+                        <button onclick="editarItemCarrito(${index})" style="background:transparent; border:1px solid #ff9800; color:#ff9800; font-size:0.75rem; padding:4px 8px; border-radius:4px; cursor:pointer;">✏️ Editar</button>
                     </div>
                     <small style="color: #888; display:block; margin-top:4px;">${formatPrice(item.unit_price)} c/u</small>
                 </div>
@@ -461,14 +476,30 @@ function renderCarrito() {
 // Función para el botón Editar
 function editarItemCarrito(index) {
   const item = carrito[index];
-  abrirOpciones(
-    {
-      id: item.product_id,
-      name: item.name,
-      price: item.unit_price - (item.customizations ? 10 : 0),
-    },
-    index,
-  );
+
+  // 1. Eliminamos el producto actual del carrito para que no se duplique
+  carrito.splice(index, 1);
+  renderCarrito();
+
+  // 2. Cerramos el carrito
+  cerrarCarrito();
+
+  // 3. Hacemos scroll suave hacia la lista de productos
+  document
+    .getElementById("productos-lista")
+    .scrollIntoView({ behavior: "smooth" });
+
+  // 4. Esperamos medio segundo a que termine el scroll y abrimos el acordeón
+  setTimeout(() => {
+    // Cerrar otros acordeones que estén abiertos
+    document
+      .querySelectorAll(".producto-card")
+      .forEach((c) => c.classList.remove("open"));
+    // Abrir el acordeón del producto que queremos editar
+    toggleOpciones(item.product_id);
+  }, 500);
+
+  showToast("Modifica las opciones y vuelve a agregar", "info");
 }
 
 async function enviarPedido() {
