@@ -5,6 +5,12 @@ if (!isset($_SESSION['usuario_id'])) {
     exit;
 }
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth.php';
+
+if (!tienePermiso('editar')) { // Solo admin tiene 'editar'
+    header('Location: dashboard.php');
+    exit;
+}
 
 $mensaje = '';
 

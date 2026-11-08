@@ -2,6 +2,14 @@
 session_start();
 require_once __DIR__ . '/../config.php';
 
+require_once __DIR__ . '/../auth.php';
+
+if (!tienePermiso('cobrar')) {
+    http_response_code(403);
+    echo json_encode(['error' => 'No tienes permiso para cobrar órdenes.']);
+    exit;
+}
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: PATCH, OPTIONS');

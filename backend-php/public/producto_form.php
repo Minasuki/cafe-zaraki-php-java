@@ -5,6 +5,12 @@ if (!isset($_SESSION['usuario_id'])) {
     exit;
 }
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth.php';
+
+if (!tienePermiso('crear') && !tienePermiso('editar')) {
+    header('Location: dashboard.php');
+    exit;
+}
 
 $producto = null;
 $mensaje = '';
@@ -38,8 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $sql = "UPDATE products SET name=:name, description=:desc, price=:price, category=:cat, stock=:stock WHERE id=:id";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
-                    ':name' => $name, ':desc' => $description, ':price' => $price, 
-                    ':cat' => $category, ':stock' => $stock, ':id' => $_POST['id']
+                    ':name' => $name,
+                    ':desc' => $description,
+                    ':price' => $price,
+                    ':cat' => $category,
+                    ':stock' => $stock,
+                    ':id' => $_POST['id']
                 ]);
                 $mensaje = 'Producto actualizado correctamente.';
                 // Refrescamos los datos del producto
@@ -51,8 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $sql = "INSERT INTO products (name, description, price, category, stock) VALUES (:name, :desc, :price, :cat, :stock)";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
-                    ':name' => $name, ':desc' => $description, ':price' => $price, 
-                    ':cat' => $category, ':stock' => $stock
+                    ':name' => $name,
+                    ':desc' => $description,
+                    ':price' => $price,
+                    ':cat' => $category,
+                    ':stock' => $stock
                 ]);
                 $mensaje = 'Producto creado correctamente.';
                 header("Location: productos.php");
@@ -66,23 +79,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title><?= $producto ? 'Editar' : 'Nuevo' ?> Producto - Café Zaraki</title>
     <link rel="stylesheet" href="css/base.css">
     <style>
-        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
     </style>
 </head>
+
 <body>
     <main class="container">
         <div class="card">
             <h2><?= $producto ? '✏️ Editar Producto' : '➕ Nuevo Producto' ?></h2>
-            
+
             <?php if ($mensaje): ?>
                 <div style="background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 6px; margin-bottom: 15px;"><?= $mensaje ?></div>
             <?php endif; ?>
@@ -157,4 +203,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 </body>
+
 </html>
