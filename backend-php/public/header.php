@@ -26,10 +26,11 @@ require_once __DIR__ . '/../auth.php';
                 <a href="productos.php" style="color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.1);">Productos</a>
                 <a href="inventario.php" style="color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.1);">Inventario</a>
             <?php endif; ?>
-            <a href="logout.php" style="color: #ff8a80; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-weight: bold;">Salir</a>
+            <?php if (tienePermiso('usuarios')): ?>
+                <a href="usuarios.php" style="color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.1);">Usuarios</a>
+            <?php endif; ?>
         <?php endif; ?>
-        <?php if (tienePermiso('usuarios')): ?>
-            <a href="usuarios.php" style="color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.1);">Usuarios</a>
-        <?php endif; ?>
+        <a href="logout.php" style="color: #ff8a80; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-weight: bold;">Salir</a>
+
     </nav>
 </header>

@@ -2,7 +2,6 @@
 session_start();
 require_once __DIR__ . '/../auth.php';
 
-// Bloqueo de seguridad: Solo admin puede ver esto
 if (!tienePermiso('usuarios')) {
     header('Location: dashboard.php');
     exit;
@@ -10,25 +9,47 @@ if (!tienePermiso('usuarios')) {
 require_once __DIR__ . '/../config.php';
 
 $mensaje = '';
+$usuario_editar = null;
 
-// Procesar la creación de usuario
+// --- LÓGICA PARA CARGAR EL USUARIO A EDITAR ---
+if (isset($_GET['editar'])) {
+    $stmtEdit = $pdo->prepare("SELECT * FROM usuarios WHERE id = :id");
+    $stmtEdit->execute([':id' => $_GET['editar']]);
+    $usuario_editar = $stmtEdit->fetch();
+}
+
+// --- LÓGICA PARA GUARDAR (CREAR O EDITAR) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
     $nombre = trim($_POST['nombre_completo']);
     $password = $_POST['password'];
     $rol_id = (int)$_POST['rol_id'];
+    $id_editar = $_POST['id_editar'] ?? null;
 
-    if ($username && $nombre && $password && $rol_id) {
-        try {
-            // Encriptar la contraseña de forma segura
+    try {
+        if ($id_editar) {
+            // ES UNA EDICIÓN
+            if (!empty($password)) {
+                // Si escribió una contraseña nueva, la actualizamos
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("UPDATE usuarios SET username=:u, nombre_completo=:n, password_hash=:h, rol_id=:r WHERE id=:id");
+                $stmt->execute([':u' => $username, ':n' => $nombre, ':h' => $hash, ':r' => $rol_id, ':id' => $id_editar]);
+            } else {
+                // Si dejó la contraseña en blanco, no la tocamos
+                $stmt = $pdo->prepare("UPDATE usuarios SET username=:u, nombre_completo=:n, rol_id=:r WHERE id=:id");
+                $stmt->execute([':u' => $username, ':n' => $nombre, ':r' => $rol_id, ':id' => $id_editar]);
+            }
+            $mensaje = "✅ Usuario actualizado exitosamente.";
+            $usuario_editar = null; // Limpiamos el formulario
+        } else {
+            // ES UNA CREACIÓN NUEVA
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            
             $stmt = $pdo->prepare("INSERT INTO usuarios (username, password_hash, nombre_completo, rol_id) VALUES (:u, :h, :n, :r)");
             $stmt->execute([':u' => $username, ':h' => $hash, ':n' => $nombre, ':r' => $rol_id]);
-            $mensaje = "✅ Usuario creado exitosamente.";
-        } catch (Exception $e) {
-            $mensaje = "❌ Error: El nombre de usuario ya existe o hubo un problema.";
+            $mensaje = "✅ Usuario creado exitosamente. Se le asignaron privilegios por defecto.";
         }
+    } catch (Exception $e) {
+        $mensaje = "❌ Error: El nombre de usuario ya existe o hubo un problema.";
     }
 }
 
@@ -36,8 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmtU = $pdo->query("SELECT u.id, u.username, u.nombre_completo, r.nombre AS rol FROM usuarios u JOIN roles r ON u.rol_id = r.id ORDER BY u.id DESC");
 $usuarios = $stmtU->fetchAll();
 
-// Obtener los roles disponibles
-$roles = $pdo->query("SELECT * FROM roles")->fetchAll();
+// Obtener SOLO los roles admin y empleado (Filtro solicitado)
+$roles = $pdo->query("SELECT * FROM roles WHERE nombre IN ('admin', 'empleado')")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -54,6 +75,8 @@ $roles = $pdo->query("SELECT * FROM roles")->fetchAll();
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
         .alert { background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
+        .btn-edit { background: #2196f3; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem; }
+        .form-edicion { background: #fff3e0; border: 2px solid #ff9800; }
     </style>
 </head>
 <body>
@@ -64,32 +87,45 @@ $roles = $pdo->query("SELECT * FROM roles")->fetchAll();
             <div class="alert"><?= htmlspecialchars($mensaje) ?></div>
         <?php endif; ?>
 
-        <div class="card">
-            <h3>➕ Crear Nuevo Usuario</h3>
+        <div class="card <?= $usuario_editar ? 'form-edicion' : '' ?>">
+            <h3><?= $usuario_editar ? '✏️ Editando Usuario: ' . htmlspecialchars($usuario_editar['username']) : '➕ Crear Nuevo Usuario' ?></h3>
+            
             <form method="POST" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <!-- Campo oculto para saber si estamos editando -->
+                <?php if ($usuario_editar): ?>
+                    <input type="hidden" name="id_editar" value="<?= $usuario_editar['id'] ?>">
+                <?php endif; ?>
+
                 <div class="form-group">
                     <label>Nombre de Usuario (para login)</label>
-                    <input type="text" name="username" required placeholder="Ej. juanperez">
+                    <input type="text" name="username" required value="<?= $usuario_editar ? htmlspecialchars($usuario_editar['username']) : '' ?>">
                 </div>
                 <div class="form-group">
                     <label>Nombre Completo</label>
-                    <input type="text" name="nombre_completo" required placeholder="Ej. Juan Pérez">
+                    <input type="text" name="nombre_completo" required value="<?= $usuario_editar ? htmlspecialchars($usuario_editar['nombre_completo']) : '' ?>">
                 </div>
                 <div class="form-group">
-                    <label>Contraseña</label>
-                    <input type="password" name="password" required placeholder="Escribe una contraseña segura">
+                    <label>Contraseña <?= $usuario_editar ? '(Dejar en blanco para no cambiar)' : '' ?></label>
+                    <input type="password" name="password" <?= $usuario_editar ? '' : 'required' ?>>
                 </div>
                 <div class="form-group">
                     <label>Rol del Usuario</label>
                     <select name="rol_id" required>
                         <option value="">Seleccione un rol...</option>
                         <?php foreach ($roles as $r): ?>
-                            <option value="<?= $r['id'] ?>"><?= ucfirst($r['nombre']) ?></option>
+                            <option value="<?= $r['id'] ?>" <?= ($usuario_editar && $usuario_editar['rol_id'] == $r['id']) ? 'selected' : '' ?>>
+                                <?= ucfirst($r['nombre']) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div style="grid-column: span 2;">
-                    <button type="submit" class="btn-success" style="width: 100%; padding: 12px;">Guardar Usuario</button>
+                <div style="grid-column: span 2; display: flex; gap: 10px;">
+                    <button type="submit" class="btn-success" style="flex-grow: 1; padding: 12px;">
+                        <?= $usuario_editar ? 'Guardar Cambios' : 'Crear Usuario' ?>
+                    </button>
+                    <?php if ($usuario_editar): ?>
+                        <a href="usuarios.php" class="btn-secondary" style="padding: 12px; text-decoration: none;">Cancelar</a>
+                    <?php endif; ?>
                 </div>
             </form>
         </div>
@@ -103,6 +139,7 @@ $roles = $pdo->query("SELECT * FROM roles")->fetchAll();
                         <th>Usuario</th>
                         <th>Nombre Real</th>
                         <th>Rol</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -117,6 +154,9 @@ $roles = $pdo->query("SELECT * FROM roles")->fetchAll();
                                     color: <?= $u['rol'] === 'admin' ? '#c62828' : '#1565c0' ?>;">
                                     <?= ucfirst($u['rol']) ?>
                                 </span>
+                            </td>
+                            <td>
+                                <a href="usuarios.php?editar=<?= $u['id'] ?>" class="btn-edit">✏️ Editar</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
