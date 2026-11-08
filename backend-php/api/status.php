@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once __DIR__ . '/../config.php';
 
 require_once __DIR__ . '/../auth.php';
@@ -81,7 +83,7 @@ try {
     $order['total'] = (float) $order['total'];
 
     echo json_encode($order, JSON_UNESCAPED_UNICODE);
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     // Si el Procedimiento Almacenado lanza un error (SIGNAL), PDO lo captura aquí
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);

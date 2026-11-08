@@ -3,12 +3,8 @@
 // ⚠️ CAMBIA ESTA URL según el backend que uses:
 // - FastAPI:  http://127.0.0.1:8000/api/v1
 // - PHP:      http://127.0.0.1:8080/cafe/api
-const API_URL = "http://127.0.0.1:8000/api/v1";
+const API_URL = "../../api"; // O '../api' dependiendo de tu carpeta
 
-// WebSocket (solo disponible en FastAPI por ahora)
-const WS_URL = "ws://127.0.0.1:8000/ws/employee";
-
-// Wrapper de fetch con manejo de errores
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_URL}${endpoint}`;
   const config = {
@@ -18,20 +14,16 @@ async function apiRequest(endpoint, options = {}) {
 
   const response = await fetch(url, config);
 
-  // Leemos la respuesta como texto para evitar que falle de golpe
-  const textoRespuesta = await response.text();
+  // Obtenemos el texto crudo
+  const texto = await response.text();
 
   try {
-    // Intentamos convertir el texto a JSON
-    const data = JSON.parse(textoRespuesta);
-    if (!response.ok) {
-      throw new Error(data.error || `Error ${response.status}`);
-    }
-    return data;
+    return JSON.parse(texto); // Intentamos leerlo
   } catch (error) {
-    // Si falla, significa que PHP imprimió un error de HTML
-    console.error("🚨 ERROR EN EL SERVIDOR. Respuesta cruda:", textoRespuesta);
-    throw new Error("Error en el servidor. Revisa la consola (F12).");
+    // Si falla, imprimimos el HTML del error en consola
+    console.error("🚨 ERROR DEL SERVIDOR (No es JSON):", texto);
+    alert("Hubo un error en el servidor. Revisa la consola (F12).");
+    throw new Error("Error del servidor");
   }
 }
 

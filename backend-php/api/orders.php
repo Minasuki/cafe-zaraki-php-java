@@ -80,7 +80,7 @@ try {
         }
 
         $query .= " ORDER BY o.created_at ASC";
-        
+
         $stmt = $pdo->prepare($query);
         $stmt->execute($params);
         $orders = $stmt->fetchAll();
@@ -124,8 +124,8 @@ try {
         ");
 
         foreach ($body['items'] as $item) {
-            $custom = isset($item['customizations']) && is_array($item['customizations']) 
-                      ? implode(', ', $item['customizations']) : null;
+            $custom = isset($item['customizations']) && is_array($item['customizations'])
+                ? implode(', ', $item['customizations']) : null;
 
             $stmtItem->execute([
                 ':order_id' => $order_id,
@@ -151,9 +151,10 @@ try {
 
     http_response_code(405);
     echo json_encode(['error' => 'Método no permitido']);
-
-} catch (Exception $e) {
-    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+} catch (Throwable $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     http_response_code(500);
     // Si hay un error en SQL, lo devolvemos como JSON para que JS no falle
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
