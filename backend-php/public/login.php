@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Login exitoso
             $_SESSION['usuario_id'] = $usuario['id'];
             $_SESSION['usuario_nombre'] = $usuario['nombre_completo'];
-            $_SESSION['usuario_rol'] = $usuario['rol_id'];
+            $_SESSION['usuario_rol'] = $usuario['rol'];
             
             header('Location: dashboard.php');
             exit;

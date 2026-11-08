@@ -1,10 +1,18 @@
 <?php
+session_start();
 require_once __DIR__ . '/../config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: PATCH, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+
+// Verificar que el usuario tenga permiso para cobrar
+if (!tienePermiso('cobrar')) {
+    http_response_code(403);
+    echo json_encode(['error' => 'No tienes permiso para realizar esta acción.']);
+    exit;
+}
 
 session_start(); // Iniciar sesión para saber quién cobra
 

@@ -6,6 +6,8 @@ if (!isset($_SESSION['usuario_id'])) {
 }
 require_once __DIR__ . '/../config.php';
 
+require_once __DIR__ . '/../auth.php';
+
 // Lógica para ARCHIVAR un producto (Soft Delete)
 if (isset($_GET['eliminar'])) {
     $id = (int)$_GET['eliminar'];
@@ -29,6 +31,7 @@ if ($buscar) {
 }
 $productos = $stmt->fetchAll();
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -86,7 +89,6 @@ $productos = $stmt->fetchAll();
 
 <body>
     <?php include 'header.php'; ?>
-
     <main class="container">
         <?php if (isset($mensaje)): ?>
             <div style="background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 6px; margin-top: 20px;"><?= htmlspecialchars($mensaje) ?></div>
@@ -98,10 +100,18 @@ $productos = $stmt->fetchAll();
         <div class="card">
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3>Catálogo de Productos Y Activos</h3>
+                <h3>Catálogo de Productos Activos</h3>
                 <div>
-                    <a href="productos_archivados.php" class="btn-info" style="text-decoration: none; padding: 10px 16px; border-radius: 6px; color: white; margin-right: 10px;">Ver Archivados</a>
-                    <a href="producto_form.php" class="btn-success" style="text-decoration: none; padding: 10px 16px; border-radius: 6px; color: white;">+ Nuevo Producto</a>
+                    <!-- El botón "Ver Archivados" se muestra solo si tiene permiso de ver -->
+                    <?php if (tienePermiso('ver')): ?>
+                        <a href="productos_archivados.php" class="btn-info" style="text-decoration: none; padding: 10px 16px; border-radius: 6px; color: white; margin-right: 10px;">Ver Archivados</a>
+
+                    <?php endif; ?>
+
+                    <!-- El botón "+ Nuevo Producto" SOLO se muestra si tiene permiso de crear -->
+                    <?php if (tienePermiso('crear')): ?>
+                        <a href="producto_form.php" class="btn-success" style="text-decoration: none; padding: 10px 16px; border-radius: 6px; color: white;">+ Nuevo Producto</a>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -133,8 +143,12 @@ $productos = $stmt->fetchAll();
                             <td>$<?= number_format($p['price'], 2) ?></td>
                             <td><?= $p['stock'] >= 9000 ? '∞' : $p['stock'] ?></td>
                             <td class="acciones">
-                                <a href="producto_form.php?id=<?= $p['id'] ?>" class="btn-sm btn-edit">Editar</a>
-                                <a href="productos.php?eliminar=<?= $p['id'] ?>" class="btn-sm btn-delete" onclick="return confirm('¿Archivar este producto? Desaparecerá del menú pero se guardará en el historial.');">Archivar</a>
+                                <?php if (tienePermiso('editar')): ?>
+                                    <a href="producto_form.php?id=<?= $p['id'] ?>" class="btn-sm btn-edit">Editar</a>
+                                <?php endif; ?>
+                                <?php if (tienePermiso('archivar')): ?>
+                                    <a href="productos.php?eliminar=<?= $p['id'] ?>" class="btn-sm btn-delete" onclick="return confirm('¿Archivar este producto? Desaparecerá del menú pero se guardará en el historial.');">Archivar</a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
