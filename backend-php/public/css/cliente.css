@@ -300,8 +300,14 @@ body {
 
 /* Cuando está abierto, se expande */
 .producto-card.open .producto-opciones {
-    max-height: 800px; /* Un valor alto para que quepa todo */
+    max-height: 3000px; /* <-- Aumentamos el límite para que quepa todo */
     border-top: 1px solid #3a2820;
+}
+
+/* Le damos un margen a la tarjeta cuando está abierta para separarla del siguiente producto */
+.producto-card.open {
+    margin-bottom: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5); /* Una sombra para que resalte */
 }
 
 .opciones-inner {
