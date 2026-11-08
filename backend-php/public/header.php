@@ -28,5 +28,8 @@ require_once __DIR__ . '/../auth.php';
             <?php endif; ?>
             <a href="logout.php" style="color: #ff8a80; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-weight: bold;">Salir</a>
         <?php endif; ?>
+        <?php if (tienePermiso('usuarios')): ?>
+            <a href="usuarios.php" style="color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.1);">Usuarios</a>
+        <?php endif; ?>
     </nav>
 </header>
