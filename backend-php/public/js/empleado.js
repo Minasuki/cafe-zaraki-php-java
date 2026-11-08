@@ -53,6 +53,13 @@ function configurarEventos() {
 }
 
 async function cargarOrdenes() {
+   const grid = document.getElementById('ordenes-grid');
+    
+    // Mostramos un mensaje de carga para que el usuario sepa que está cambiando
+    if (primeraCarga) {
+        grid.innerHTML = '<p class="loading">Cargando...</p>';
+    }
+    
     try {
         let dateParam = (filtroActual !== 'paid') ? 'today' : filtroFecha;
         let url = `/orders.php?date=${dateParam}`;
