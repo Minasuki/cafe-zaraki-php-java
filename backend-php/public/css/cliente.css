@@ -551,3 +551,53 @@ body {
     flex-direction: column;
     gap: 12px;
 }
+
+/* Cuando un acordeón está abierto, ocultamos el botón flotante */
+body.acordeon-abierto .fab-carrito {
+    display: none;
+}
+
+/* Damos un poco de espacio extra abajo del acordeón para que el botón respire */
+.opciones-inner {
+    padding-bottom: 30px; 
+}
+
+/* Estilos para el contador de cantidad (+ / -) */
+.contador-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #2c1e17;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #3a2820;
+}
+
+.contador-controles {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.contador-controles button {
+    background: #3a2820;
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.contador-controles span {
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+    min-width: 20px;
+    text-align: center;
+}

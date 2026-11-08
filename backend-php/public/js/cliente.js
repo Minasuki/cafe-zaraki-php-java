@@ -169,61 +169,68 @@ function agregarAlCarrito(productId, indexCarrito = null) {
 // --- LÓGICA DEL ACORDEÓN DE OPCIONES ---
 
 function toggleOpciones(productId) {
-  const producto = productos.find((p) => p.id === productId);
-  const card = document.getElementById(`prod-${productId}`);
+    const producto = productos.find(p => p.id === productId);
+    const card = document.getElementById(`prod-${productId}`);
 
-  // Si es panadería o pastelería, se agrega directo sin abrir acordeón
-  if (producto.category !== "Bebidas" || producto.name.includes("Agua")) {
-    guardarEnCarrito(producto, null, [], parseFloat(producto.price));
-    return;
-  }
+    if (producto.category !== 'Bebidas' || producto.name.includes('Agua')) {
+        guardarEnCarrito(producto, null, [], parseFloat(producto.price));
+        return;
+    }
 
-  // Si la tarjeta ya está abierta, la cerramos
-  if (card.classList.contains("open")) {
-    card.classList.remove("open");
-    return;
-  }
+    if (card.classList.contains('open')) {
+        card.classList.remove('open');
+        document.body.classList.remove('acordeon-abierto'); // Mostrar FAB
+        return;
+    }
 
-  // Cerrar cualquier otro acordeón abierto
-  document
-    .querySelectorAll(".producto-card")
-    .forEach((c) => c.classList.remove("open"));
+    document.querySelectorAll('.producto-card').forEach(c => c.classList.remove('open'));
+    card.classList.add('open');
+    document.body.classList.add('acordeon-abierto'); // Ocultar FAB
 
-  // Abrir esta tarjeta
-  card.classList.add("open");
-
-  // Si aún no se ha dibujado el HTML de las opciones, lo dibujamos
-  const contenedorOpciones = document.getElementById(`opciones-${productId}`);
-  if (contenedorOpciones.innerHTML.trim() === "") {
-    seleccionesTemporales[productId] = {}; // Inicializar
-
-    contenedorOpciones.innerHTML = `
+    const contenedorOpciones = document.getElementById(`opciones-${productId}`);
+    if (contenedorOpciones.innerHTML.trim() === '') {
+        seleccionesTemporales[productId] = {}; 
+        
+        // Generar el HTML
+        contenedorOpciones.innerHTML = `
             <div class="opciones-inner">
-                ${opcionesBebidas
-                  .map(
-                    (grupo) => `
-                    <div class="option-group">
-                        <h4>${grupo.titulo} <span class="req">*Requerido</span></h4>
-                        ${grupo.opciones
-                          .map(
-                            (op) => `
-                            <label class="option-label" onclick="seleccionarOpcionAcordeon(${productId}, '${grupo.id}', '${op.valor}', ${op.extra}, this)">
-                                <span class="opt-name">${op.valor}</span>
-                                ${op.extra > 0 ? `<span class="opt-price">+${formatPrice(op.extra)}</span>` : ""}
-                            </label>
-                        `,
-                          )
-                          .join("")}
-                    </div>
-                `,
-                  )
-                  .join("")}
+                ${opcionesBebidas.map(grupo => {
+                    // Si es de tipo contador, generamos un HTML diferente
+                    if (grupo.tipo === 'contador') {
+                        return `
+                            <div class="option-group">
+                                <h4>${grupo.titulo} <span class="req">*Requerido</span></h4>
+                                <div class="contador-wrapper">
+                                    <span class="opt-name">${grupo.titulo}</span>
+                                    <div class="contador-controles">
+                                        <button type="button" onclick="cambiarContador(${productId}, '${grupo.id}', -1, ${grupo.min}, ${grupo.max})">−</button>
+                                        <span id="val-${productId}-${grupo.id}">0</span>
+                                        <button type="button" onclick="cambiarContador(${productId}, '${grupo.id}', 1, ${grupo.min}, ${grupo.max})">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Si es de tipo radio normal
+                        return `
+                            <div class="option-group">
+                                <h4>${grupo.titulo} <span class="req">*Requerido</span></h4>
+                                ${grupo.opciones.map(op => `
+                                    <label class="option-label" onclick="seleccionarOpcionAcordeon(${productId}, '${grupo.id}', '${op.valor}', ${op.extra}, this)">
+                                        <span class="opt-name">${op.valor}</span>
+                                        ${op.extra > 0 ? `<span class="opt-price">+${formatPrice(op.extra)}</span>` : ''}
+                                    </label>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                }).join('')}
                 <button class="btn-primary btn-agregar-acordeon" id="btn-add-${productId}" disabled onclick="confirmarAgregar(${productId})">
                     Agregar al carrito
                 </button>
             </div>
         `;
-  }
+    }
 }
 
 function seleccionarOpcionAcordeon(
@@ -262,63 +269,109 @@ function seleccionarOpcionAcordeon(
   }
 }
 
+function cambiarContador(productId, grupoId, delta, min, max) {
+    if (!seleccionesTemporales[productId]) seleccionesTemporales[productId] = {};
+    
+    // Obtener valor actual o inicializarlo en 0
+    let valorActual = seleccionesTemporales[productId][grupoId] ? seleccionesTemporales[productId][grupoId].qty : 0;
+    let nuevoValor = valorActual + delta;
+
+    if (nuevoValor < min || nuevoValor > max) return; // Respetar límites
+
+    // Actualizar UI
+    document.getElementById(`val-${productId}-${grupoId}`).textContent = nuevoValor;
+
+    // Guardar en memoria
+    seleccionesTemporales[productId][grupoId] = { 
+        qty: nuevoValor, 
+        valor: `${nuevoValor} cucharada(s)`,
+        extra: 0 // Si quisieras cobrar por cucharada, iría aquí
+    };
+
+    verificarBotonAcordeon(productId);
+}
+
+function verificarBotonAcordeon(productId) {
+    const totalRequeridos = opcionesBebidas.length;
+    const seleccionados = Object.keys(seleccionesTemporales[productId] || {}).length;
+
+    const btn = document.getElementById(`btn-add-${productId}`);
+    if (seleccionados >= totalRequeridos) {
+        btn.disabled = false;
+        let precioFinal = parseFloat(productos.find(p => p.id === productId).price);
+        for (const key in seleccionesTemporales[productId]) {
+            precioFinal += seleccionesTemporales[productId][key].extra || 0;
+        }
+        btn.textContent = `Agregar al carrito - ${formatPrice(precioFinal)}`;
+    }
+}
+
 function confirmarAgregar(productId) {
-  const producto = productos.find((p) => p.id === productId);
-  const selecciones = seleccionesTemporales[productId];
+    const producto = productos.find(p => p.id === productId);
+    const selecciones = seleccionesTemporales[productId];
+    
+    let precioFinal = parseFloat(producto.price);
+    const opcionesFinales = [];
+    
+    for (const key in selecciones) {
+        // Solo sumar extra si existe
+        if (selecciones[key].extra) precioFinal += selecciones[key].extra;
+        // Guardar el texto de la opción elegida
+        opcionesFinales.push(selecciones[key].valor);
+    }
 
-  let precioFinal = parseFloat(producto.price);
-  const opcionesFinales = [];
-
-  for (const key in selecciones) {
-    precioFinal += selecciones[key].extra;
-    opcionesFinales.push(selecciones[key].valor);
-  }
-
-  // Guardar en carrito
-  guardarEnCarrito(producto, null, opcionesFinales, precioFinal);
-
-  // Cerrar acordeón y limpiar memoria
-  document.getElementById(`prod-${productId}`).classList.remove("open");
-  seleccionesTemporales[productId] = {};
-
-  // Resetear el HTML interno para que la próxima vez esté limpio
-  document.getElementById(`opciones-${productId}`).innerHTML = "";
+    guardarEnCarrito(producto, null, opcionesFinales, precioFinal);
+    
+    // Cerrar acordeón, mostrar FAB y limpiar
+    document.getElementById(`prod-${productId}`).classList.remove('open');
+    document.body.classList.remove('acordeon-abierto'); // <-- Volver a mostrar FAB
+    seleccionesTemporales[productId] = {};
+    document.getElementById(`opciones-${productId}`).innerHTML = '';
 }
 
 // CONFIGURACIÓN DE OPCIONES POR CATEGORÍA O PRODUCTO
 // Si el producto es "Bebidas" (excepto agua), le pedirá estas opciones.
 const opcionesBebidas = [
-  {
-    id: "tamano",
-    titulo: "Tamaño de la bebida",
-    requerido: true,
-    opciones: [
-      { valor: "Chico (8oz)", extra: 0 },
-      { valor: "Mediano (12oz)", extra: 10 }, // Suma $10 al precio
-      { valor: "Grande (16oz)", extra: 15 },
-    ],
-  },
-  {
-    id: "cafeina",
-    titulo: "Cafeína",
-    requerido: true,
-    opciones: [
-      { valor: "Con cafeína", extra: 0 },
-      { valor: "Descafeinado", extra: 0 },
-    ],
-  },
-  {
-    id: "azucar",
-    titulo: "Endulzante",
-    requerido: true,
-    opciones: [
-      { valor: "Azúcar normal", extra: 0 },
-      { valor: "Splenda", extra: 0 },
-      { valor: "Miel", extra: 5 },
-      { valor: "Mascabo", extra: 0 },
-      { valor: "Sin azúcar", extra: 0 },
-    ],
-  },
+    {
+        id: 'tamano',
+        titulo: 'Tamaño de la bebida',
+        requerido: true,
+        opciones: [
+            { valor: 'Chico (8oz)', extra: 0 },
+            { valor: 'Mediano (12oz)', extra: 10 },
+            { valor: 'Grande (16oz)', extra: 15 }
+        ]
+    },
+    {
+        id: 'cafeina',
+        titulo: 'Cafeína',
+        requerido: true,
+        opciones: [
+            { valor: 'Con cafeína', extra: 0 },
+            { valor: 'Descafeinado', extra: 0 }
+        ]
+    },
+    {
+        id: 'endulzante',
+        titulo: 'Tipo de Endulzante',
+        requerido: true,
+        opciones: [
+            { valor: 'Azúcar normal', extra: 0 },
+            { valor: 'Splenda', extra: 0 },
+            { valor: 'Miel', extra: 5 },
+            { valor: 'Mascabo', extra: 0 },
+            { valor: 'Sin azúcar', extra: 0 }
+        ]
+    },
+    {
+        id: 'cucharadas',
+        titulo: 'Cantidad de cucharadas', // <-- NUEVA OPCIÓN
+        requerido: true,
+        tipo: 'contador', // Le decimos que será un contador
+        min: 0,
+        max: 5,
+        extraPorUnidad: 0 // Si cada cucharada costara extra, se pone aquí
+    }
 ];
 
 function cambiarCantidad(index, delta) {
