@@ -24,7 +24,6 @@ if (!isset($_SESSION['usuario_id'])) {
         <div style="text-align: center; margin-top: 50px;">
             <h2>Bienvenido al sistema</h2>
             <p>Has iniciado sesión correctamente. Desde aquí puedes gestionar los pedidos.</p>
-            <!-- Aquí a futuro podrías agregar tarjetas de reportes (Ventas del día, etc.) -->
         </div>
     </main>
 </body>

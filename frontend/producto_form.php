@@ -4,8 +4,8 @@ if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
     exit;
 }
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../auth.php';
+require_once __DIR__ . '/../backend/config.php';
+require_once __DIR__ . '/../backend/auth.php';
 
 if (!tienePermiso('crear') && !tienePermiso('editar')) {
     header('Location: dashboard.php');
@@ -180,7 +180,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </main>
 
-    <!-- Validación en JavaScript (Requisito del Profe) -->
     <script>
         function validarFormulario() {
             const name = document.getElementById('name').value.trim();

@@ -10,7 +10,7 @@ if (isset($_SESSION['usuario_id'])) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once __DIR__ . '/../config.php';
+    require_once __DIR__ . '/../backend/config.php';
 
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';

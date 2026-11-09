@@ -4,9 +4,8 @@ if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
     exit;
 }
-require_once __DIR__ . '/../config.php';
-
-require_once __DIR__ . '/../auth.php';
+require_once __DIR__ . '/../backend/config.php';
+require_once __DIR__ . '/../backend/auth.php';
 
 // Lógica para ARCHIVAR un producto (Soft Delete)
 if (isset($_GET['eliminar'])) {

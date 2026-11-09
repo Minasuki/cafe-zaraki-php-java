@@ -34,7 +34,7 @@ function configurarEventos() {
             const filtrosTiempo = document.getElementById('filtros-tiempo');
             filtrosTiempo.style.display = (filtroActual === 'paid') ? 'flex' : 'none';
 
-            // Al cambiar de pestaña, solo filtramos en memoria (no pedimos a la BD de nuevo)
+            // Al cambiar de pestaña, solo filtramos en memoria 
             filtrarYRenderizar();
         });
     });

@@ -1,6 +1,6 @@
 // js/api.js - Capa de comunicación con el API
 
-const API_URL = '../api';
+const API_URL = '../../backend/api'; 
 
 async function apiRequest(endpoint, options = {}) {
     const url = `${API_URL}${endpoint}`;

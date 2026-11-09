@@ -1,12 +1,12 @@
 <?php
 session_start();
-require_once __DIR__ . '/../auth.php';
+require_once __DIR__ . '/../backend/auth.php';
+require_once __DIR__ . '/../backend/config.php';
 
 if (!tienePermiso('usuarios')) {
     header('Location: dashboard.php');
     exit;
 }
-require_once __DIR__ . '/../config.php';
 
 $mensaje = '';
 $usuario_editar = null;
