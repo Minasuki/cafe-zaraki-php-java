@@ -14,17 +14,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
-    // ============ GET: listar órdenes ============
     if ($method === 'GET') {
-        $status = $_GET['status'] ?? null;
         $order_id = $_GET['id'] ?? null;
+        $date_filter = $_GET['date'] ?? null;
 
-        // GET /orders.php?id=1 → detalle de una orden
+        // 1. Detalle de una orden
         if ($order_id) {
             $stmt = $pdo->prepare("
-                SELECT id, customer_name, status, total, created_at
-                FROM orders
-                WHERE id = :id
+                SELECT o.id, o.customer_name, o.status, o.total, o.created_at, u.nombre_completo AS cajero
+                FROM orders o LEFT JOIN usuarios u ON o.cajero_id = u.id
+                WHERE o.id = :id
             ");
             $stmt->execute([':id' => $order_id]);
             $order = $stmt->fetch();
@@ -35,50 +34,39 @@ try {
                 exit;
             }
 
-            // Traer los ítems con nombre del producto
             $stmtItems = $pdo->prepare("
                 SELECT oi.id, oi.product_id, oi.quantity, oi.unit_price, oi.customizations, p.name AS product_name
-                FROM order_items oi
-                JOIN products p ON oi.product_id = p.id
+                FROM order_items oi JOIN products p ON oi.product_id = p.id
                 WHERE oi.order_id = :id
             ");
             $stmtItems->execute([':id' => $order_id]);
-            $items = $stmtItems->fetchAll();
+            $order['items'] = $stmtItems->fetchAll();
 
             $order['id'] = (int) $order['id'];
             $order['total'] = (float) $order['total'];
-            foreach ($items as &$it) {
-                $it['id'] = (int) $it['id'];
-                $it['product_id'] = (int) $it['product_id'];
-                $it['quantity'] = (int) $it['quantity'];
-                $it['unit_price'] = (float) $it['unit_price'];
-            }
-            $order['items'] = $items;
-
             echo json_encode($order, JSON_UNESCAPED_UNICODE);
             exit;
         }
 
-        // GET /orders.php?status=pending → listar órdenes (con filtro opcional)
-        if ($status) {
-            $stmt = $pdo->prepare("
-                SELECT o.id, o.customer_name, o.status, o.total, o.created_at, u.nombre_completo AS cajero
-                FROM orders o
-                LEFT JOIN usuarios u ON o.cajero_id = u.id
-                WHERE o.status = :status
-                ORDER BY o.created_at ASC
-            ");
-            $stmt->execute([':status' => $status]);
-        } else {
-            $stmt = $pdo->query("
-               SELECT o.id, o.customer_name, o.status, o.total, o.created_at, u.nombre_completo AS cajero
-                FROM orders o
-                LEFT JOIN usuarios u ON o.cajero_id = u.id
-                ORDER BY o.created_at ASC
-            ");
+        // 2. Listar órdenes (Solo filtramos por FECHA en SQL, el estado lo filtra JS)
+        $query = "SELECT o.id, o.customer_name, o.status, o.total, o.created_at, u.nombre_completo AS cajero 
+                  FROM orders o LEFT JOIN usuarios u ON o.cajero_id = u.id WHERE 1=1";
+        $params = [];
+
+        if ($date_filter === 'today') {
+            $query .= " AND DATE(o.created_at) = CURRENT_DATE";
+        } elseif ($date_filter === 'week') {
+            $query .= " AND o.created_at >= NOW() - INTERVAL 7 DAY";
+        } elseif ($date_filter === 'month') {
+            $query .= " AND o.created_at >= NOW() - INTERVAL 1 MONTH";
         }
 
+        $query .= " ORDER BY o.created_at ASC";
+        
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
         $orders = $stmt->fetchAll();
+
         foreach ($orders as &$o) {
             $o['id'] = (int) $o['id'];
             $o['total'] = (float) $o['total'];
@@ -87,6 +75,7 @@ try {
         echo json_encode($orders, JSON_UNESCAPED_UNICODE);
         exit;
     }
+    // ... (El método POST se queda exactamente igual que en tu versión anterior) ...
 
     // ============ POST: crear orden ============
     if ($method === 'POST') {
